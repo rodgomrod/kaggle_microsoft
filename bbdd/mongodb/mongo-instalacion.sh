@@ -18,4 +18,13 @@ sudo apt-get update
 
 sudo apt-get install -y mongodb-org
 
+echo " "
+echo "#########################################"
+echo "# AÑADIENDO COMANDOS RAPIDOS AL .bashrc #"
+echo "#########################################"
+echo " "
+
+echo 'alias activateMongodb="sudo systemctl start mongodb && sudo systemctl enable mongodb"' >> ~/.bashrc
+echo 'alias desactivateMongodb="sudo systemctl stop mongodb"' >> ~/.bashrc
+
 
