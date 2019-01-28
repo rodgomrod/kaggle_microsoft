@@ -23,3 +23,11 @@ data = indexer.fit(data).transform(data)
 data = data.fillna( { 'Census_PrimaryDiskTypeName':'UNKNOWN'} )
 indexer = StringIndexer(inputCol="Census_PrimaryDiskTypeName", outputCol="Census_PrimaryDiskTypeNameIndex")
 data = indexer.fit(data).transform(data)
+
+
+#######
+
+
+
+
+
