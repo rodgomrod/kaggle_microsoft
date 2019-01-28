@@ -24,6 +24,16 @@ data = data.fillna( { 'Census_PrimaryDiskTypeName':'UNKNOWN'} )
 indexer = StringIndexer(inputCol="Census_PrimaryDiskTypeName", outputCol="Census_PrimaryDiskTypeNameIndex")
 data = indexer.fit(data).transform(data)
 
+
+## Census_ChassisTypeName
+	# Frecuencia 
+frequency_census = data.groupBy('Census_ChassisTypeName').count().withColumnRenamed('count','Census_ChassisTypeName_freq')
+data = data.join(frequency_census,'Census_ChassisTypeName','left')
+
+
+
+
+
 #######
 
 # Rodrigo
