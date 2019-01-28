@@ -16,3 +16,10 @@ data = #Todo
 	# Label enconding para variables categoricas
 indexer = StringIndexer(inputCol="ProductName", outputCol="ProductNameIndex")
 data = indexer.fit(data).transform(data)
+
+
+## Census_PrimaryDiskTypeName
+	# Label encoding para Census_PrimaryDiskTypeName.
+data = data.fillna( { 'Census_PrimaryDiskTypeName':'UNKNOWN'} )
+indexer = StringIndexer(inputCol="Census_PrimaryDiskTypeName", outputCol="Census_PrimaryDiskTypeNameIndex")
+data = indexer.fit(data).transform(data)
