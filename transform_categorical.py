@@ -37,6 +37,19 @@ data = data.fillna( { 'Census_PowerPlatformRoleName':'UNKNOWN'} )
 indexer = StringIndexer(inputCol="Census_PowerPlatformRoleName", outputCol="Census_PowerPlatformRoleNameIndex")
 data = indexer.fit(data).transform(data)
 
+## Census_InternalBatteryType
+	# Frecuencia
+frequency_census = data.groupBy('Census_InternalBatteryType').count().withColumnRenamed('count','Census_InternalBatteryType_freq')
+data = data.join(frequency_census,'Census_InternalBatteryType','left')
+
+	#Booleana
+data = data.withColumn('Census_InternalBatteryType_informed',when(col('Census_InternalBatteryType').isNotNull(),1).otherwise(0))
+
+
+
+
+
+
 
 
 #######
