@@ -31,6 +31,11 @@ frequency_census = data.groupBy('Census_ChassisTypeName').count().withColumnRena
 data = data.join(frequency_census,'Census_ChassisTypeName','left')
 
 
+## Census_PowerPlatformRoleName
+	# Label encoding
+data = data.fillna( { 'Census_PowerPlatformRoleName':'UNKNOWN'} )
+indexer = StringIndexer(inputCol="Census_PowerPlatformRoleName", outputCol="Census_PowerPlatformRoleNameIndex")
+data = indexer.fit(data).transform(data)
 
 
 
