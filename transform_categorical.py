@@ -56,6 +56,11 @@ indexer = StringIndexer(inputCol="Census_OSArchitecture", outputCol="Census_OSAr
 data = indexer.fit(data).transform(data)
 
 
+## Census_OSBranch 
+	# frequency 
+frequency_census = data.groupBy('Census_OSBranch').count().withColumnRenamed('count','Census_OSBranch_freq')
+data = data.join(frequency_census,'Census_OSBranch','left')
+
 
 #######
 
