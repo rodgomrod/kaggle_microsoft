@@ -28,7 +28,7 @@ media_RtpStateBitfield = df_num.agg(avg("RtpStateBitfield")).collect()[0][0]
 
 # Diccionario de imputaciones para todas las columnas que presentan valores nulos
 imputaciones = \
-{'RtpStateBitfield': media_RtpStateBitfield, # tiene STDDEV = 1 por lo que la media puede resultar
+{'RtpStateBitfield': media_RtpStateBitfield, # la media puede resultar
  'DefaultBrowsersIdentifier': 0, # el 0 no existe, lo metemos en esta categoria
  'AVProductStatesIdentifier': 1, # el minimo es 2, metemos los null en el 1
  'AVProductsInstalled': 8, # el maximo es 8
