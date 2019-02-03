@@ -11,16 +11,19 @@ from pyspark.ml import Pipeline
 print('Inicio del Script')
 
 # Configuracion de memoria y cores
-cores = multiprocessing.cpu_count()
-p = 3
+cores = (multiprocessing.cpu_count() - 1)
+p = 5
 particiones = cores * p
-memoria = 16 # memoria ram instalada
-dm = memoria/2
+# memoria = 16 # memoria ram instalada
+# dm = memoria/2
 conf = SparkConf()
 conf.set("spark.driver.cores", cores)
-conf.set("spark.driver.memory", "13g")
+conf.set("spark.executor.cores", cores)
+conf.set("spark.executor.memory", "12g")
+conf.set("spark.driver.memory", "12g")
 conf.set("spark.sql.shuffle.partitions", particiones)
 conf.set("spark.default.parallelism", particiones)
+conf.set("spark.sql.autoBroadcastJoinThreshold", -1)
 sc = SparkContext(conf=conf)
 
 # SparkSession
@@ -46,8 +49,28 @@ columnas_indexer = ['ProductName', 'Census_PrimaryDiskTypeName', 'Census_PowerPl
                     'Census_ProcessorClass', 'Census_OSInstallTypeName', 'Census_OSWUAutoUpdateOptionsName',
                     'Census_GenuineStateName', 'Platform', 'Processor', 'OsPlatformSubRelease', 'SkuEdition', 'PuaMode',
                     'Census_DeviceFamily']
-print('\tIndexers paras las columnas {}'.format(columnas_indexer))
+
+columnas_freq = [
+    'Census_ChassisTypeName',
+    'Census_InternalBatteryType',
+    'Census_OSBranch',
+    'Census_OSEdition',
+    'Census_FlightRing',
+    'Census_OSSkuName',
+    'OsVer',
+    'SmartScreen',
+    'Census_MDC2FormFactor'
+]
+
+print('\tPipeline de Indexers paras las columnas {0}\n'
+      'y de las columnas freq {1}'.format(columnas_indexer, columnas_freq))
 indexers = [StringIndexer(inputCol=c, outputCol=c+"_index", handleInvalid="keep").fit(data) for c in columnas_indexer]
+
+# freqs = [data.join(data.groupBy(c).count().withColumnRenamed('count','{}_freq'.format(c)), c,
+#                    'left') for c in columnas_freq]
+# frequency_census = data.groupBy('Census_InternalBatteryType').count().withColumnRenamed('count','Census_InternalBatteryType_freq')
+# data = data.join(frequency_census,'Census_InternalBatteryType','left')
+# Stages = indexers + freqs
 pipeline = Pipeline(stages=indexers)
 data0 = pipeline.fit(data).transform(data)
 
@@ -58,9 +81,9 @@ for c in columnas_indexer:
 data = data0.fillna(imputaciones)
 
 # Persist intermedio
-print('Persist intermedio')
+print('Persist intermedio 1')
 data.persist()
-data.first()
+print('FIRST:\n{}'.format(data.first()))
 
 # print('\tProductName')
 # ## ProductName
@@ -77,7 +100,7 @@ data.first()
 
 print('\tCensus_ChassisTypeName')
 ## Census_ChassisTypeName
-	# Frecuencia 
+	# Frecuencia
 frequency_census = data.groupBy('Census_ChassisTypeName').count().withColumnRenamed('count','Census_ChassisTypeName_freq')
 data = data.join(frequency_census,'Census_ChassisTypeName','left')
 
@@ -88,7 +111,7 @@ data = data.join(frequency_census,'Census_ChassisTypeName','left')
 # indexer = StringIndexer(inputCol="Census_PowerPlatformRoleName", outputCol="Census_PowerPlatformRoleNameIndex")
 # data = indexer.fit(data).transform(data)
 
-print('\tCensus_InternalBatteryType')
+print('\tCensus_InternalBatteryType bool')
 ## Census_InternalBatteryType
 	# Frecuencia
 frequency_census = data.groupBy('Census_InternalBatteryType').count().withColumnRenamed('count','Census_InternalBatteryType_freq')
@@ -112,10 +135,14 @@ data = data.withColumn('Census_OSVersion_0', split(data['Census_OSVersion'], '\.
 # data = indexer.fit(data).transform(data)
 
 print('\tCensus_OSBranch')
-## Census_OSBranch 
-	# frequency 
+## Census_OSBranch
+	# frequency
 frequency_census = data.groupBy('Census_OSBranch').count().withColumnRenamed('count','Census_OSBranch_freq')
 data = data.join(frequency_census,'Census_OSBranch','left')
+
+print('Persist intermedio 2')
+data.persist()
+print('FIRST:\n{}'.format(data.first()))
 
 # print('\tCensus_ProcessorClass')
 # ## Census_ProcessorClass
@@ -136,6 +163,7 @@ print('\tCensus_OSSkuName')
 	# Frecuencia
 frequency_Census_OSSkuName = data.groupBy('Census_OSSkuName').count().withColumnRenamed('count','Census_OSSkuName_freq')
 data = data.join(frequency_Census_OSSkuName,'Census_OSSkuName','left')
+
 
 # print('\tCensus_OSInstallTypeName')
 # ## Census_OSInstallTypeName
@@ -210,6 +238,10 @@ print('\tOsVer')
 	# Frecuencia
 df_cat_freq_osver = data.groupBy('OsVer').count().withColumnRenamed('count', 'OsVer_freq')
 data = data.join(df_cat_freq_osver, ['OsVer'], 'left')
+
+print('Persist intermedio 3')
+data.persist()
+print('FIRST:\n{}'.format(data.first()))
 
 # print('\tOsPlatformSubRelease')
 # ## OsPlatformSubRelease
