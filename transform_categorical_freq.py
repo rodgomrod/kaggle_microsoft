@@ -12,13 +12,13 @@ import sys
 print('Inicio del Script')
 
 # Configuracion de memoria y cores
-cores = (multiprocessing.cpu_count() - 1)
-p = 3
+cores = multiprocessing.cpu_count()
+p = 30
 particiones = cores * p
 # memoria = 16 # memoria ram instalada
 # dm = memoria/2
 conf = SparkConf()
-conf.set("spark.driver.cores", 1)
+conf.set("spark.driver.cores", cores)
 conf.set("spark.executor.cores", cores)
 conf.set("spark.executor.memory", "10g")
 conf.set("spark.driver.memory", "3g")
@@ -33,7 +33,8 @@ spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
 
 # Read data
 print('Lectura del DF crudo')
-data = spark.read.csv('data/df_cat/*.csv', header=True, inferSchema=True)
+data = spark.read.csv('data/df_cat/*.csv', header=True, inferSchema=True)\
+.select('Census_ChassisTypeName', 'Census_InternalBatteryType', 'Census_OSBranch', 'Census_OSEdition', 'Census_OSSkuName', 'Census_FlightRing', 'OsVer', 'SmartScreen', 'Census_MDC2FormFactor')
 
 # Persistimos el DF para mejorar el rendimiento
 data.persist()
@@ -51,6 +52,9 @@ print('\tCensus_ChassisTypeName')
 frequency_census = data.groupBy('Census_ChassisTypeName').count().withColumnRenamed('count','Census_ChassisTypeName_freq')
 data = data.join(frequency_census,'Census_ChassisTypeName','left').drop('Census_ChassisTypeName')
 
+data.persist()
+print(data.first())
+
 
 print('\tCensus_InternalBatteryType bool')
 ## Census_InternalBatteryType
@@ -58,10 +62,11 @@ print('\tCensus_InternalBatteryType bool')
 frequency_census = data.groupBy('Census_InternalBatteryType').count().withColumnRenamed('count','Census_InternalBatteryType_freq')
 data = data.join(frequency_census,'Census_InternalBatteryType','left')
 
-	#Booleana
+	#Booleana. QUITAR EN EL FUTURO EL NULL
 data = data.withColumn('Census_InternalBatteryType_informed', when(col('Census_InternalBatteryType').isNotNull(),1).otherwise(0)).drop('Census_InternalBatteryType')
 
 data.persist()
+print(data.first())
 
 print('\tCensus_OSBranch')
 ## Census_OSBranch
@@ -69,6 +74,8 @@ print('\tCensus_OSBranch')
 frequency_census = data.groupBy('Census_OSBranch').count().withColumnRenamed('count','Census_OSBranch_freq')
 data = data.join(frequency_census,'Census_OSBranch','left').drop('Census_OSBranch')
 
+data.persist()
+print(data.first())
 
 print('\tCensus_OSEdition')
 ## Census_OSEdition
@@ -77,6 +84,7 @@ df_cat_freq_Census_OSEdition = data.groupBy('Census_OSEdition').count().withColu
 data = data.join(df_cat_freq_Census_OSEdition, ['Census_OSEdition'], 'left').drop('Census_OSEdition')
 
 data.persist()
+print(data.first())
 
 print('\tCensus_OSSkuName')
 ## Census_OSSkuName
@@ -84,6 +92,8 @@ print('\tCensus_OSSkuName')
 frequency_Census_OSSkuName = data.groupBy('Census_OSSkuName').count().withColumnRenamed('count','Census_OSSkuName_freq')
 data = data.join(frequency_Census_OSSkuName,'Census_OSSkuName','left').drop('Census_OSSkuName')
 
+data.persist()
+print(data.first())
 
 print('\tCensus_FlightRing')
 ## Census_FlightRing
@@ -92,6 +102,7 @@ frequency_Census_Census_FlightRing = data.groupBy('Census_FlightRing').count().w
 data = data.join(frequency_Census_Census_FlightRing,'Census_FlightRing','left').drop('Census_FlightRing')
 
 data.persist()
+print(data.first())
 
 print('\tOsVer')
 ## OsVer
@@ -99,12 +110,17 @@ print('\tOsVer')
 df_cat_freq_osver = data.groupBy('OsVer').count().withColumnRenamed('count', 'OsVer_freq')
 data = data.join(df_cat_freq_osver, ['OsVer'], 'left').drop('OsVer')
 
+data.persist()
+print(data.first())
 
 print('\tSmartScreen')
 ## SmartScreen
 	# Frecuencia
 df_cat_freq_SmartScreen = data.groupBy('SmartScreen').count().withColumnRenamed('count', 'SmartScreen_freq')
 data = data.join(df_cat_freq_SmartScreen, ['SmartScreen'], 'left').drop('SmartScreen')
+
+data.persist()
+print(data.first())
 
 print('\tCensus_MDC2FormFactor')
 ## Census_MDC2FormFactor
@@ -113,15 +129,21 @@ df_cat_freq_osver = data.groupBy('Census_MDC2FormFactor').count().withColumnRena
 data = data.join(df_cat_freq_osver, ['Census_MDC2FormFactor'], 'left').drop('Census_MDC2FormFactor')
 
 data.persist()
+print(data.first())
 
 # Guardamos el DF con las variables categoricas transformadas
 final_cols = data.columns
 cols_transformadas = list(set(final_cols) - set(init_cols))
 
+imputaciones = dict()
+for c in final_cols:
+    imputaciones[c] = -1
+final_data = data.fillna(imputaciones)
+
 write_path = 'data/df_cat_transform_0/freq'
 print('Guardamos el DF en {}'.format(write_path))
 # final_data = data.select(['MachineIdentifier'] + cols_transformadas)
-data.write.csv(write_path, sep=',', mode="overwrite", header=True)
+final_data.write.csv(write_path, sep=',', mode="overwrite", header=True)
 
 
 
