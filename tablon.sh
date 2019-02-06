@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 echo "Generando DFs con vars categoricas y numericas"
-python3 generador_num_cat.py
+python3 ETL/Extract/numerical_categoric_dataset.py
 
 echo "Transformamos variables categoricas"
-python3 ETL/transform_categorical.py
+python3 ETL/Transform/categorical/frequency.py
+python3 ETL/Transform/categorical/label_enconder.py
 
 echo "Imputamos valores numericos"
-python3 ETL/impute_numerical.py
+python3 ETL/Transform/numeric/impute_numerical.py
 
-echo "Generamos TRAIN / TEST final"
-python3 genera_train_test_final.py
+echo "Generamos TRAIN / TEST de las variables nuevas"
+python3 ETL/Load/train_test_new_variables.py
