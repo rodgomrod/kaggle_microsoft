@@ -10,6 +10,8 @@ from pyspark.ml import Pipeline
 
 print('Inicio del Script')
 
+# TODO: estudiar los nulls y los unknown
+
 # Configuracion de memoria y cores
 cores = multiprocessing.cpu_count()
 p = 30
@@ -19,8 +21,8 @@ particiones = cores * p
 conf = SparkConf()
 conf.set("spark.driver.cores", cores)
 conf.set("spark.executor.cores", cores)
-conf.set("spark.executor.memory", "11g")
-conf.set("spark.driver.memory", "4g")
+# conf.set("spark.executor.memory", "11g")
+# conf.set("spark.driver.memory", "4g")
 conf.set("spark.sql.shuffle.partitions", particiones)
 conf.set("spark.default.parallelism", particiones)
 sc = SparkContext(conf=conf)
@@ -30,7 +32,7 @@ spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
 
 # Read data
 print('Lectura del DF crudo')
-data = spark.read.csv('data/df_cat/*.csv', header=True, inferSchema=True)\
+data = spark.read.csv('../../../data/df_cat/*.csv', header=True, inferSchema=True)\
 .select('MachineIdentifier', 'ProductName', 'Census_PrimaryDiskTypeName', 'Census_PowerPlatformRoleName', 'Census_OSArchitecture',
                     'Census_ProcessorClass', 'Census_OSInstallTypeName', 'Census_OSWUAutoUpdateOptionsName',
                     'Census_GenuineStateName', 'Platform', 'Processor', 'OsPlatformSubRelease', 'SkuEdition', 'PuaMode',
@@ -63,11 +65,16 @@ data0 = pipeline.fit(data).transform(data)
 # Imputamos los nulls que hayan quedado
 imputaciones = dict()
 for c in columnas_indexer:
-    imputaciones[c] = -1
+    imputaciones[c+"_index"] = -1
+    data0 = data0.drop(c)
 data = data0.fillna(imputaciones)
-
-for c in columnas_indexer:
-	data = data.drop(c)
+# imputaciones = dict()
+# for c in columnas_indexer:
+#     imputaciones[c] = -1
+# data = data0.fillna(imputaciones)
+#
+# for c in columnas_indexer:
+#     data = data.drop(c)
 
 # Persist intermedio
 print('Persist intermedio 1')
@@ -154,20 +161,20 @@ data0 = pipeline.fit(data).transform(data)
 imputaciones = dict()
 for c in columnas_indexer:
     imputaciones[c+"_index"] = -1
-	data = data.drop(c)
+    data0 = data0.drop(c)
 data = data0.fillna(imputaciones)
 
 
 # Guardamos el DF con las variables categoricas transformadas
 for c in ['Census_OSVersion', 'Census_OSBranch', 'EngineVersion', 'AppVersion', 'AvSigVersion', 'OsBuildLab']:
-	data = data.drop(c)
+    data = data.drop(c)
 final_data = data
 data.persist()
 print('FIRST:\n{}'.format(data.first()))
 # final_cols = data.columns
 # cols_transformadas = list(set(final_cols) - set(init_cols))
 
-write_path = 'data/df_cat_transform_0/indexer_version'
+write_path = '../../../data/df_cat_transform_0/indexer_version'
 print('Guardamos el DF en {}'.format(write_path))
 # final_data = data.select(['MachineIdentifier'] + cols_transformadas)
 final_data.write.csv(write_path, sep=',', mode="overwrite", header=True)

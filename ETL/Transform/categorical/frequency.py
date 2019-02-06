@@ -20,21 +20,22 @@ particiones = cores * p
 conf = SparkConf()
 conf.set("spark.driver.cores", cores)
 conf.set("spark.executor.cores", cores)
-conf.set("spark.executor.memory", "10g")
-conf.set("spark.driver.memory", "3g")
+# conf.set("spark.executor.memory", "10g")
+# conf.set("spark.driver.memory", "3g")
 conf.set("spark.sql.shuffle.partitions", particiones)
 conf.set("spark.default.parallelism", particiones)
 sc = SparkContext(conf=conf)
 
 # c = sys.argv[1]
+# TODO: estudiar los nulls y los unknown
 
 # SparkSession
 spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
 
 # Read data
 print('Lectura del DF crudo')
-data = spark.read.csv('data/df_cat/*.csv', header=True, inferSchema=True)\
-.select('Census_ChassisTypeName', 'Census_InternalBatteryType', 'Census_OSBranch', 'Census_OSEdition', 'Census_OSSkuName', 'Census_FlightRing', 'OsVer', 'SmartScreen', 'Census_MDC2FormFactor')
+data = spark.read.csv('../../../data/df_cat/*.csv', header=True, inferSchema=True)\
+.select('MachineIdentifier', 'Census_ChassisTypeName', 'Census_InternalBatteryType', 'Census_OSBranch', 'Census_OSEdition', 'Census_OSSkuName', 'Census_FlightRing', 'OsVer', 'SmartScreen', 'Census_MDC2FormFactor')
 
 # Persistimos el DF para mejorar el rendimiento
 data.persist()
@@ -135,12 +136,14 @@ print(data.first())
 final_cols = data.columns
 cols_transformadas = list(set(final_cols) - set(init_cols))
 
+print('Columnas transformadas: {}'.format(cols_transformadas))
+
 imputaciones = dict()
 for c in final_cols:
     imputaciones[c] = -1
 final_data = data.fillna(imputaciones)
 
-write_path = 'data/df_cat_transform_0/freq'
+write_path = '../../../data/df_cat_transform_0/freq'
 print('Guardamos el DF en {}'.format(write_path))
 # final_data = data.select(['MachineIdentifier'] + cols_transformadas)
 final_data.write.csv(write_path, sep=',', mode="overwrite", header=True)
