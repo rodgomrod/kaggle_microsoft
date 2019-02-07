@@ -5,8 +5,9 @@ from pyspark.sql.functions import *
 from pyspark import SparkConf
 from pyspark import SparkContext
 import multiprocessing
-
+# =============================================================================
 # Configuracion de memoria y nº particiones
+# =============================================================================
 cores = multiprocessing.cpu_count()
 p = 10
 conf = SparkConf()
