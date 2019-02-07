@@ -82,9 +82,12 @@ data.persist()
 print('FIRST:\n{}'.format(data.first()))
 
 
+# =============================================================================
+# Census_OSVersion
+#      Al ser una version, se ha hecho split por el punto "."
+# =============================================================================
+
 print('\tCensus_OSVersion')
-## Census_OSVersion
-    # Al ser una version, se ha hecho split por el punto "."
 data = data.withColumn('Census_OSVersion_0', split(data['Census_OSVersion'], '\.')[0].cast(IntegerType()))\
 .withColumn('Census_OSVersion_1', split(data['Census_OSVersion'], '\.')[1].cast(IntegerType()))\
 .withColumn('Census_OSVersion_2', split(data['Census_OSVersion'], '\.')[2].cast(IntegerType()))\
@@ -93,29 +96,38 @@ data = data.withColumn('Census_OSVersion_0', split(data['Census_OSVersion'], '\.
 data.persist()
 print('FIRST:\n{}'.format(data.first()))
 
+
+# =============================================================================
+# Census_OSBranch
+# 	frequency
+# =============================================================================
 print('\tCensus_OSBranch')
-## Census_OSBranch
-	# frequency
 frequency_census = data.groupBy('Census_OSBranch').count().withColumnRenamed('count','Census_OSBranch_freq')
 data = data.join(frequency_census,'Census_OSBranch','left')
 
 data.persist()
 print('FIRST:\n{}'.format(data.first()))
 
+
+# =============================================================================
+# EngineVersion
+# 	 Al ser una version, se ha hecho split por el punto "."
+#    [0] y [1] es igual para el DF al completo, se ignora
+# =============================================================================
 print('\tEngineVersion')
-## EngineVersion
-	# Al ser una version, se ha hecho split por el punto "."
-    # [0] y [1] es igual para el DF al completo, se ignora
 data = data.withColumn('EngineVersion_2', split(data['EngineVersion'], '\.')[2].cast(IntegerType()))\
 .withColumn('EngineVersion_3', split(data['EngineVersion'], '\.')[3].cast(IntegerType()))
 
 data.persist()
 print('FIRST:\n{}'.format(data.first()))
 
+
+# =============================================================================
+# AppVersion
+# 	Al ser una version, se ha hecho split por el punto "."
+#   [0] es igual para el DF al completo, se ignora
+# =============================================================================
 print('\tAppVersion')
-## AppVersion
-	# Al ser una version, se ha hecho split por el punto "."
-    # [0] es igual para el DF al completo, se ignora
 data = data.withColumn('AppVersion_1', split(data['AppVersion'], '\.')[1].cast(IntegerType()))\
 .withColumn('AppVersion_2', split(data['AppVersion'], '\.')[2].cast(IntegerType()))\
 .withColumn('AppVersion_3', split(data['AppVersion'], '\.')[3].cast(IntegerType()))
@@ -123,10 +135,13 @@ data = data.withColumn('AppVersion_1', split(data['AppVersion'], '\.')[1].cast(I
 data.persist()
 print('FIRST:\n{}'.format(data.first()))
 
+
+# =============================================================================
+# AvSigVersion
+# 	Al ser una version, se ha hecho split por el punto "."
+#    [3] es igual para el DF al completo, se ignora
+# =============================================================================
 print('\tAvSigVersion')
-## AvSigVersion
-	# Al ser una version, se ha hecho split por el punto "."
-    # [3] es igual para el DF al completo, se ignora
 data = data.withColumn('AvSigVersion_0', split(data['AvSigVersion'], '\.')[0].cast(IntegerType()))\
 .withColumn('AvSigVersion_1', split(data['AvSigVersion'], '\.')[1].cast(IntegerType()))\
 .withColumn('AvSigVersion_2', split(data['AvSigVersion'], '\.')[2].cast(IntegerType()))
@@ -134,9 +149,12 @@ data = data.withColumn('AvSigVersion_0', split(data['AvSigVersion'], '\.')[0].ca
 data.persist()
 print('FIRST:\n{}'.format(data.first()))
 
+
+# =============================================================================
+# OsBuildLab
+# 	split por punto "." y transformamos
+# =============================================================================
 print('\tOsBuildLab')
-## OsBuildLab
-	# split por punto "." y transformamos
 data1 = data.withColumn('OsBuildLab_0', split(data['OsBuildLab'], '\.')[0].cast(IntegerType()))\
 .withColumn('OsBuildLab_1', split(data['OsBuildLab'], '\.')[1].cast(IntegerType()))\
 .withColumn('OsBuildLab_2', split(data['OsBuildLab'], '\.')[2])\
@@ -157,7 +175,13 @@ indexers = [StringIndexer(inputCol=c, outputCol=c+"_index", handleInvalid="keep"
 pipeline = Pipeline(stages=indexers)
 data0 = pipeline.fit(data).transform(data)
 
+
+
+# =============================================================================
+# NULLs
 # Imputamos los nulls que hayan quedado
+# =============================================================================
+
 imputaciones = dict()
 for c in columnas_indexer:
     imputaciones[c+"_index"] = -1
@@ -165,7 +189,11 @@ for c in columnas_indexer:
 data = data0.fillna(imputaciones)
 
 
-# Guardamos el DF con las variables categoricas transformadas
+
+# =============================================================================
+# Guardar DataFrames
+#       Guardamos el DF con las variables categoricas transformadas
+# =============================================================================
 for c in ['Census_OSVersion', 'Census_OSBranch', 'EngineVersion', 'AppVersion', 'AvSigVersion', 'OsBuildLab']:
     data = data.drop(c)
 final_data = data
