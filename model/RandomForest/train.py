@@ -29,8 +29,9 @@ train_cols.remove('HasDetections')
 print('Conversion de datos a VectorAssembler')
 assembler_features = VectorAssembler(inputCols=train_cols, outputCol='features')
 train_data = assembler_features.transform(train)
+train_data.show(5)
 
-numFolds = 3
+kFolds = 3
 
 print('Creamos modelo')
 rf = RandomForestClassifier(labelCol="HasDetections", featuresCol="features")
@@ -38,18 +39,22 @@ evaluator = BinaryClassificationEvaluator(rawPredictionCol="features",
                                           labelCol="HasDetections",
                                           metricName="areaUnderROC")
 
-pipeline = Pipeline(stages=[rf])
+# pipeline = Pipeline(stages=[rf])
 paramGrid = ParamGridBuilder()\
-    .addGrid(rf.numTrees, [3, 10])\
+    .addGrid(rf.numTrees, [10, 20])\
+    .addGrid(rf.setSeed, [1])\
+    .addGrid(rf.setMaxDepth, [7, 9])\
     .build()
+
+
 # .addGrid(...)  # Add other parameters
 
-print('Creamos cross-validador con {} folds'.format(numFolds))
+print('Creamos cross-validador con {} folds'.format(kFolds))
 crossval = CrossValidator(
-    estimator=pipeline,
+    estimator=rf,
     estimatorParamMaps=paramGrid,
     evaluator=evaluator,
-    numFolds=numFolds)
+    numFolds=kFolds)
 
 print('Entrenando modelo...')
 model = crossval.fit(train_data)
@@ -60,9 +65,13 @@ try:
 except:
     print('No se pudo guardar el modelo')
 
-print(model.bestModel.summary)
-print(model.bestModel.summary())
+try:
+    print(model.bestModel.summary)
+except:
+    pass
 
-rfModel = model.stages[2]
-print(rfModel)  # summary only
-
+try:
+    rfModel = model.stages[2]
+    print(rfModel)  # summary only
+except:
+    pass
