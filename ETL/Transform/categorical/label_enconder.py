@@ -37,7 +37,7 @@ data = spark.read.csv('../../../data/df_cat/*.csv', header=True, inferSchema=Tru
                     'Census_ProcessorClass', 'Census_OSInstallTypeName', 'Census_OSWUAutoUpdateOptionsName',
                     'Census_GenuineStateName', 'Platform', 'Processor', 'OsPlatformSubRelease', 'SkuEdition', 'PuaMode',
                     'Census_DeviceFamily', 'Census_OSVersion', 'Census_OSBranch', 'EngineVersion', 'AppVersion',
-'AvSigVersion', 'OsBuildLab')
+'AvSigVersion', 'OsBuildLab', 'OsVer')
 
 # Persistimos el DF para mejorar el rendimiento
 data.persist()
@@ -145,6 +145,20 @@ print('\tAvSigVersion')
 data = data.withColumn('AvSigVersion_0', split(data['AvSigVersion'], '\.')[0].cast(IntegerType()))\
 .withColumn('AvSigVersion_1', split(data['AvSigVersion'], '\.')[1].cast(IntegerType()))\
 .withColumn('AvSigVersion_2', split(data['AvSigVersion'], '\.')[2].cast(IntegerType()))
+
+data.persist()
+print('FIRST:\n{}'.format(data.first()))
+
+
+# =============================================================================
+# OsVer
+# 	Al ser una version, se ha hecho split por el punto "."
+# =============================================================================
+print('\tOsVer')
+data = data.withColumn('OsVer_0', split(data['OsVer'], '\.')[0].cast(IntegerType()))\
+.withColumn('OsVer_1', split(data['OsVer'], '\.')[1].cast(IntegerType()))\
+.withColumn('OsVer_2', split(data['OsVer'], '\.')[2].cast(IntegerType()))\
+.withColumn('OsVer_3', split(data['OsVer'], '\.')[3].cast(IntegerType()))
 
 data.persist()
 print('FIRST:\n{}'.format(data.first()))

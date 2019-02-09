@@ -13,13 +13,13 @@ print('Inicio del Script')
 
 # Configuracion de memoria y cores
 cores = multiprocessing.cpu_count()
-p = 30
+p = 10
 particiones = cores * p
 # memoria = 16 # memoria ram instalada
 # dm = memoria/2
 conf = SparkConf()
-conf.set("spark.driver.cores", cores)
-conf.set("spark.executor.cores", cores)
+# conf.set("spark.driver.cores", cores)
+# conf.set("spark.executor.cores", cores)
 # conf.set("spark.executor.memory", "10g")
 # conf.set("spark.driver.memory", "3g")
 conf.set("spark.sql.shuffle.partitions", particiones)
@@ -35,7 +35,14 @@ spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
 # Read data
 print('Lectura del DF crudo')
 data = spark.read.csv('../../../data/df_cat/*.csv', header=True, inferSchema=True)\
-.select('MachineIdentifier', 'Census_ChassisTypeName', 'Census_InternalBatteryType', 'Census_OSBranch', 'Census_OSEdition', 'Census_OSSkuName', 'Census_FlightRing', 'OsVer', 'SmartScreen', 'Census_MDC2FormFactor')
+.select('MachineIdentifier', 'Census_ChassisTypeName', 'Census_InternalBatteryType', 'Census_OSBranch', 'Census_OSEdition', 'Census_OSSkuName', 'Census_FlightRing', 'SmartScreen', 'Census_MDC2FormFactor')
+
+imputaciones = {
+    'Census_ChassisTypeName': 'Unknown'
+}
+
+# Transformaciones previas de los datos. Agrupacion y limpieza
+
 
 # Persistimos el DF para mejorar el rendimiento
 data.persist()
@@ -65,8 +72,8 @@ print(data.first())
 # 	Frecuencia
 # =============================================================================
 print('\tCensus_InternalBatteryType bool')
-frequency_census = data.groupBy('Census_InternalBatteryType').count().withColumnRenamed('count','Census_InternalBatteryType_freq')
-data = data.join(frequency_census,'Census_InternalBatteryType','left')
+# frequency_census = data.groupBy('Census_InternalBatteryType').count().withColumnRenamed('count','Census_InternalBatteryType_freq')
+# data = data.join(frequency_census,'Census_InternalBatteryType','left')
 
 # 	Booleana. QUITAR EN EL FUTURO EL NULL
 data = data.withColumn('Census_InternalBatteryType_informed', when(col('Census_InternalBatteryType').isNotNull(),1).otherwise(0)).drop('Census_InternalBatteryType')
@@ -118,18 +125,6 @@ print(data.first())
 print('\tCensus_FlightRing')
 frequency_Census_Census_FlightRing = data.groupBy('Census_FlightRing').count().withColumnRenamed('count','Census_FlightRing_freq')
 data = data.join(frequency_Census_Census_FlightRing,'Census_FlightRing','left').drop('Census_FlightRing')
-
-data.persist()
-print(data.first())
-
-
-# =============================================================================
-# OsVer
-# 	Frecuencia
-# =============================================================================
-print('\tOsVer')
-df_cat_freq_osver = data.groupBy('OsVer').count().withColumnRenamed('count', 'OsVer_freq')
-data = data.join(df_cat_freq_osver, ['OsVer'], 'left').drop('OsVer')
 
 data.persist()
 print(data.first())
