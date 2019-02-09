@@ -36,7 +36,7 @@ data = spark.read.csv('../../../data/df_cat/*.csv', header=True, inferSchema=Tru
 .select('MachineIdentifier', 'ProductName', 'Census_PrimaryDiskTypeName', 'Census_PowerPlatformRoleName', 'Census_OSArchitecture',
                     'Census_ProcessorClass', 'Census_OSInstallTypeName', 'Census_OSWUAutoUpdateOptionsName',
                     'Census_GenuineStateName', 'Platform', 'Processor', 'OsPlatformSubRelease', 'SkuEdition', 'PuaMode',
-                    'Census_DeviceFamily', 'Census_OSVersion', 'Census_OSBranch', 'EngineVersion', 'AppVersion',
+                    'Census_DeviceFamily', 'Census_OSVersion', 'EngineVersion', 'AppVersion',
 'AvSigVersion', 'OsBuildLab', 'OsVer')
 
 # Persistimos el DF para mejorar el rendimiento
