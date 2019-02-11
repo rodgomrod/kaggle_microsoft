@@ -32,7 +32,7 @@ spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
 
 # Read data
 print('Lectura del DF crudo')
-data = spark.read.csv('../../../data/df_cat/*.csv', header=True, inferSchema=True)\
+data = spark.read.csv('data/df_cat/*.csv', header=True, inferSchema=True)\
 .select('MachineIdentifier', 'ProductName', 'Census_PrimaryDiskTypeName', 'Census_PowerPlatformRoleName', 'Census_OSArchitecture',
                     'Census_ProcessorClass', 'Census_OSInstallTypeName', 'Census_OSWUAutoUpdateOptionsName',
                     'Census_GenuineStateName', 'Platform', 'Processor', 'OsPlatformSubRelease', 'SkuEdition', 'PuaMode',
@@ -216,7 +216,7 @@ print('FIRST:\n{}'.format(data.first()))
 # final_cols = data.columns
 # cols_transformadas = list(set(final_cols) - set(init_cols))
 
-write_path = '../../../data/df_cat_transform_0/indexer_version'
+write_path = 'data/df_cat_transform_0/indexer_version'
 print('Guardamos el DF en {}'.format(write_path))
 # final_data = data.select(['MachineIdentifier'] + cols_transformadas)
 final_data.write.csv(write_path, sep=',', mode="overwrite", header=True)

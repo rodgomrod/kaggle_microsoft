@@ -2,5 +2,6 @@
 /.idea/
 /.ipynb_checkpoints/
 *.log
+/jars/
 
 Notebooks/\.ipynb_checkpoints/

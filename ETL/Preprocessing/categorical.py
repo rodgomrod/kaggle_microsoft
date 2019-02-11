@@ -90,7 +90,7 @@ udf_SmartScreen = udf(lambda z: transformaciones_SmartScreen(z), StringType())
 #####################################################################################
 
 print('Lectura del DF crudo')
-data = spark.read.csv('../../data/df_cat/*.csv', header=True, inferSchema=True)\
+data = spark.read.csv('data/df_cat/*.csv', header=True, inferSchema=True)\
     .withColumn('Census_PrimaryDiskTypeName',
                     when((col('Census_PrimaryDiskTypeName').isNull()) |\
                          (col('Census_PrimaryDiskTypeName') == 'Unspecified'), 'UNKNOWN')\
@@ -128,7 +128,7 @@ imputaciones = {
 
 final_data = data_final.fillna(imputaciones)
 
-write_path = '../../data/df_cat_prepro_0/'
+write_path = 'data/df_cat_prepro_0/'
 print('Guardamos el DF en {}'.format(write_path))
 # final_data = data.select(['MachineIdentifier'] + cols_transformadas)
 final_data.write.csv(write_path, sep=',', mode="overwrite", header=True)

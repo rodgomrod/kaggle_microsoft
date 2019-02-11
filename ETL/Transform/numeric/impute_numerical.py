@@ -6,10 +6,8 @@ import multiprocessing
 
 # Configuracion de memoria y cores
 cores = multiprocessing.cpu_count()
-p = 15
+p = 5
 conf = SparkConf()
-conf.set("spark.driver.cores", cores)
-conf.set("spark.driver.memory", "10g")
 conf.set("spark.sql.shuffle.partitions", p * cores)
 conf.set("spark.default.parallelism", p * cores)
 sc = SparkContext(conf=conf)
@@ -23,19 +21,19 @@ df_num.persist()
 df_num.count()
 
 # Algunas medias y medianas para imputar
-mediana_GeoNameIdentifier = df_num.approxQuantile("GeoNameIdentifier", [0.5], 0.25)[0]
-media_RtpStateBitfield = df_num.agg(avg("RtpStateBitfield")).collect()[0][0]
+# mediana_GeoNameIdentifier = df_num.approxQuantile("GeoNameIdentifier", [0.5], 0.25)[0]
+# media_RtpStateBitfield = df_num.agg(avg("RtpStateBitfield")).collect()[0][0]
 
 # Diccionario de imputaciones para todas las columnas que presentan valores nulos
 imputaciones = \
-{'RtpStateBitfield': media_RtpStateBitfield, # la media puede resultar
+{'RtpStateBitfield': -1, # imputamos por un valor que no se encuentre en la lista
  'DefaultBrowsersIdentifier': 0, # el 0 no existe, lo metemos en esta categoria
  'AVProductStatesIdentifier': 1, # el minimo es 2, metemos los null en el 1
- 'AVProductsInstalled': 8, # el maximo es 8
+ 'AVProductsInstalled': 8, # el maximo es 7
  'AVProductsEnabled': 6, # el maximo es 5
  'CityIdentifier': -99,
  'OrganizationIdentifier': -99,
- 'GeoNameIdentifier': mediana_GeoNameIdentifier, # Al ser pocos casos, le meteremos la mediana
+ 'GeoNameIdentifier': 277, # Imputamos por la moda
  'IsProtected': 2, # es 1 o 0, lo metemos en 2 (unknown)
  'SMode': 2, # igual
  'IeVerIdentifier': -99,

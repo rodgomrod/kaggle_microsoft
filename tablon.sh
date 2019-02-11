@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-echo "Generando DFs con vars categoricas y numericas"
-python3 ETL/Extract/numerical_categoric_dataset.py
+#echo "Generando DFs con vars categoricas y numericas"
+#python3 ETL/Extract/numerical_categoric_dataset.py
 
-echo "Transformamos variables categoricas"
-python3 ETL/Transform/categorical/frequency.py
-python3 ETL/Transform/categorical/label_enconder.py
+#echo "Transformamos variables categoricas"
+#python3 ETL/Transform/categorical/global.py
 
 echo "Imputamos valores numericos"
 python3 ETL/Transform/numeric/impute_numerical.py

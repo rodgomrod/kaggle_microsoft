@@ -1,18 +1,14 @@
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
-from pyspark.mllib.linalg import Vectors
-from pyspark.mllib.regression import LabeledPoint
 from pyspark.ml import Pipeline
-from pyspark.ml.feature import StringIndexer, VectorIndexer, VectorAssembler, SQLTransformer
-from pyspark.ml.evaluation import MulticlassClassificationEvaluator, BinaryClassificationEvaluator
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
-import numpy as np
-import functools
 from pyspark.ml.classification import RandomForestClassifier
 
 spark = SparkSession.builder.appName('RF_trainer').getOrCreate()
 
-path_train = '../../data/train_final_0'
+path_train = 'data/train_final_0'
 print('Carga del TRAIN', path_train)
 train = spark.read \
     .options(header = "true", sep=',', inferschema = "true") \
@@ -21,15 +17,15 @@ train = spark.read \
 train.persist()
 print("Numero de casos en el train: %d" % train.count())
 
-train_cols = train.columns
-train_cols.remove('MachineIdentifier')
-train_cols.remove('HasDetections')
+ignore_c = ['MachineIdentifier', 'HasDetections']
+train_cols = [c for c in train.columns if c not in ignore_c]
 
 # Convertimos el TRAIN en un VECTOR para poder pasarle el RF
 print('Conversion de datos a VectorAssembler')
 assembler_features = VectorAssembler(inputCols=train_cols, outputCol='features')
 train_data = assembler_features.transform(train)
-train_data.show(5)
+train_data = train_data.select('features', 'HasDetections')
+# train_data.show(10)
 
 kFolds = 3
 
@@ -39,9 +35,9 @@ evaluator = BinaryClassificationEvaluator(rawPredictionCol="features",
                                           labelCol="HasDetections",
                                           metricName="areaUnderROC")
 
-# pipeline = Pipeline(stages=[rf])
+pipeline = Pipeline(stages=[rf])
 paramGrid = ParamGridBuilder()\
-    .addGrid(rf.numTrees, [10, 20])\
+    .addGrid(rf.numTrees, [10])\
     .addGrid(rf.setSeed, [1])\
     .addGrid(rf.setMaxDepth, [7, 9])\
     .build()
@@ -51,7 +47,7 @@ paramGrid = ParamGridBuilder()\
 
 print('Creamos cross-validador con {} folds'.format(kFolds))
 crossval = CrossValidator(
-    estimator=rf,
+    estimator=pipeline,
     estimatorParamMaps=paramGrid,
     evaluator=evaluator,
     numFolds=kFolds)
@@ -66,12 +62,28 @@ except:
     print('No se pudo guardar el modelo')
 
 try:
-    print(model.bestModel.summary)
+    for i, j in zip(model.avgMetrics, paramGrid):
+        print("Score {} con los parametros {}".format(i, j))
+except:
+    print("No se pudo hacer zip(model.avgMetrics, paramGrid)")
+
+try:
+    bestPipeline = model.bestModel
+    bestLRModel = bestPipeline.stages[2]
+    bestParams = bestLRModel.extractParamMap()
+    print("Best pipeline", bestPipeline)
+    print("Best model", bestLRModel)
+    print("Best params", bestParams)
 except:
     pass
+
+try:
+    print(model.bestModel.summary)
+except:
+    print("No se pudo hacer model.bestModel.summary")
 
 try:
     rfModel = model.stages[2]
     print(rfModel)  # summary only
 except:
-    pass
+    print("No se pudo hacer model.stages[2]")
