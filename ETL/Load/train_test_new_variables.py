@@ -1,16 +1,5 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
-from pyspark import SparkConf
-from pyspark import SparkContext
-import multiprocessing
-
-# Configuracion de memoria y cores
-cores = multiprocessing.cpu_count()
-p = 5
-conf = SparkConf()
-conf.set("spark.sql.shuffle.partitions", p * cores)
-conf.set("spark.default.parallelism", p * cores)
-sc = SparkContext(conf=conf)
 
 # SparkSession
 spark = SparkSession.builder.appName('MK_genera_train_test').getOrCreate()

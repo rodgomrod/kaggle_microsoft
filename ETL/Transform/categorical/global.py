@@ -13,7 +13,7 @@ print('Inicio del Script\n')
 
 # Configuracion de memoria y cores
 cores = multiprocessing.cpu_count()
-p = 20
+p = 2
 particiones = cores * p
 conf = SparkConf()
 conf.set("spark.sql.shuffle.partitions", particiones)

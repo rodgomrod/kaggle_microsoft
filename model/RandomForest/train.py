@@ -36,18 +36,20 @@ evaluator = BinaryClassificationEvaluator(rawPredictionCol="features",
                                           metricName="areaUnderROC")
 
 pipeline = Pipeline(stages=[rf])
-paramGrid = ParamGridBuilder()\
-    .addGrid(rf.numTrees, [10])\
-    .addGrid(rf.setSeed, [1])\
-    .addGrid(rf.setMaxDepth, [7, 9])\
-    .build()
+paramGrid = ParamGridBuilder().build()
+
+#paramGrid = ParamGridBuilder()\
+#    .addGrid(rf.numTrees, [10, 20])\
+#    .addGrid(rf.setSeed, [1])\
+#    .addGrid(rf.setMaxDepth, [7, 9])\
+#    .build()
 
 
 # .addGrid(...)  # Add other parameters
 
 print('Creamos cross-validador con {} folds'.format(kFolds))
 crossval = CrossValidator(
-    estimator=pipeline,
+    estimator=rf,
     estimatorParamMaps=paramGrid,
     evaluator=evaluator,
     numFolds=kFolds)
