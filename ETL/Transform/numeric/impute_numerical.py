@@ -3,6 +3,10 @@ from pyspark.sql.functions import *
 
 # SparkSession
 spark = SparkSession.builder.appName('MK_impute_numerical').getOrCreate()
+spark.sparkContext.setLogLevel('WARN')
+
+
+
 
 # Read data y persist para mejorar rendimiento
 df_num = spark.read.csv('data/df_num/*.csv', header=True, inferSchema=True)
