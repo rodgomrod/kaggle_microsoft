@@ -23,7 +23,8 @@ train_cols = [c for c in train.columns if c not in ignore_c]
 # Convertimos el TRAIN en un VECTOR para poder pasarle el RF
 print('Conversion de datos a VectorAssembler')
 assembler_features = VectorAssembler(inputCols=train_cols, outputCol='features')
-train_data = assembler_features.transform(train)
+train_2 = train.limit(100000)
+train_data = assembler_features.transform(train_2)
 train_data = train_data.select('features', 'HasDetections')
 # train_data.show(10)
 
@@ -36,15 +37,12 @@ evaluator = BinaryClassificationEvaluator(rawPredictionCol="features",
                                           metricName="areaUnderROC")
 
 pipeline = Pipeline(stages=[rf])
-paramGrid = ParamGridBuilder().build()
 
-#paramGrid = ParamGridBuilder()\
-#    .addGrid(rf.numTrees, [10, 20])\
-#    .addGrid(rf.setSeed, [1])\
-#    .addGrid(rf.setMaxDepth, [7, 9])\
-#    .build()
+paramGrid = ParamGridBuilder()\
+    .addGrid(rf.numTrees, [100, 200, 300]) \
+    .build()
 
-
+# .addGrid(rf.setSeed, [1])
 # .addGrid(...)  # Add other parameters
 
 print('Creamos cross-validador con {} folds'.format(kFolds))
@@ -57,9 +55,13 @@ crossval = CrossValidator(
 print('Entrenando modelo...')
 model = crossval.fit(train_data)
 print('Fin del train')
+
+# Nos quedamos con el mejor modelo
+bm = model.bestModel
+
 print('Guardando el modelo...')
 try:
-    model.bestModel.save('RandomForest_0')
+    bm.save('RandomForest_0')
 except:
     print('No se pudo guardar el modelo')
 
@@ -70,22 +72,21 @@ except:
     print("No se pudo hacer zip(model.avgMetrics, paramGrid)")
 
 try:
-    bestPipeline = model.bestModel
-    bestLRModel = bestPipeline.stages[2]
-    bestParams = bestLRModel.extractParamMap()
-    print("Best pipeline", bestPipeline)
+    bestLRModel = bm.stages[2]
+    bestParams = bm.extractParamMap()
+    print("Best pipeline", bm)
     print("Best model", bestLRModel)
     print("Best params", bestParams)
 except:
     pass
 
 try:
-    print(model.bestModel.summary)
+    print(bm.summary)
 except:
     print("No se pudo hacer model.bestModel.summary")
 
 try:
-    rfModel = model.stages[2]
+    rfModel = bm.stages[2]
     print(rfModel)  # summary only
 except:
     print("No se pudo hacer model.stages[2]")
