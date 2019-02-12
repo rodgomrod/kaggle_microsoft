@@ -3,7 +3,6 @@ from pyspark.sql.functions import *
 
 # SparkSession
 spark = SparkSession.builder.appName('MK_impute_numerical').getOrCreate()
-spark.sparkContext.setLogLevel('WARN')
 
 
 
