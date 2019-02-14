@@ -1,0 +1,10 @@
+for c in cols:
+    maximo = train.select(c).agg(max(col(c))).collect()[0][0]
+    if maximo > 2**8:
+            if maximo > 2**16:
+                    print("'{}': np.int32,".format(c))
+            else:
+                    print("'{}': np.int16,".format(c))
+    else:
+            print("'{}': np.int8,".format(c))
+

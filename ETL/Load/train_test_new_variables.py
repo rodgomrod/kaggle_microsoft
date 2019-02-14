@@ -19,7 +19,7 @@ train = train.fillna(-99)
 test = full_df.filter(col('HasDetections').isNull())
 test = test.fillna(-99)
 
-write_path_train = 'data/train_final_0'
-write_path_test = 'data/test_final_0'
-train.write.csv(write_path_train, sep=',', mode="overwrite", header=True)
-test.write.csv(write_path_test, sep=',', mode="overwrite", header=True)
+write_path_train = 'data/train_final_1'
+write_path_test = 'data/test_final_1'
+train.coalesce(1).write.csv(write_path_train, sep=',', mode="overwrite", header=True)
+test.coalesce(1).write.csv(write_path_test, sep=',', mode="overwrite", header=True)
