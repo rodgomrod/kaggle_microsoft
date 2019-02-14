@@ -1,6 +1,7 @@
 # PARA HACERLO ANDAR: pyspark --packages Azure:mmlspark:0.15   |    en consola
 
 from pyspark.sql import SparkSession
+from pyspark import SparkConf, SparkContext
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
@@ -109,7 +110,6 @@ schema_train = StructType([StructField("MachineIdentifier", StringType(), True),
                             StructField("OsBuildLab_2_index", IntegerType(), True),
                             StructField("OsBuildLab_3_index", IntegerType(), True)])
 
-
 spark = SparkSession.builder.appName('LGBM_trainer') \
     .config("spark.jars.packages", "Azure:mmlspark:0.15") \
     .getOrCreate()
@@ -140,32 +140,62 @@ train_data = train_data.select('features', 'HasDetections')\
 train_data.persist()
 train_data.first()
 
-trainDF, testDF = train_data.randomSplit([0.8, 0.2], seed=24)
+# trainDF, testDF = train_data.randomSplit([0.8, 0.2], seed=24)
 
-model = LightGBMClassifier(learningRate=0.05,
-                           numIterations=60,
+kFolds = 3
+model = LightGBMClassifier(learningRate=0.01,
+                           numIterations=100,
                            numLeaves=30,
                            objective="binary",
                            maxDepth=13,
-                           earlyStoppingRound=7,
-                           featureFraction=0.7
+                           earlyStoppingRound=10,
+                           baggingFraction=0.7
                            )
 
-model_trained = model.fit(trainDF)
+evaluator = BinaryClassificationEvaluator(rawPredictionCol="features",
+                                          labelCol="label",
+                                          metricName="areaUnderPR")
 
-prediction = model_trained.transform(testDF)
+paramGrid = ParamGridBuilder()\
+    .addGrid(model.maxDepth, [9, 13]) \
+    .addGrid(model.featureFraction, [0.9, 0.7, 0.5]) \
+    .build()
 
-metrics = ComputeModelStatistics(evaluationMetric='AUC',
-                                 labelCol='label',
-                                 scoredLabelsCol=None,
-                                 scoresCol=None).transform(prediction)
-metrics.select('accuracy').show()
+print('Creamos cross-validador con {} folds'.format(kFolds))
+crossval = CrossValidator(
+    estimator=model,
+    estimatorParamMaps=paramGrid,
+    evaluator=evaluator,
+    numFolds=kFolds,
+    seed=1)
+
+print('Entrenando modelo...')
+model_trained = crossval.fit(train_data)
+print('Fin del train')
+
+try:
+    for i, j in zip(model_trained.avgMetrics, paramGrid):
+        print("Score {} con los parametros {}".format(i, j))
+except:
+    print("No se pudo hacer zip(model.avgMetrics, paramGrid)")
+
+# FEATURES IMPORTANCES
+for i, j in zip(model_trained.bestModel.getFeatureImportances(), train_cols):
+    if i > 0:
+        print(i,j)
+
+
+
+# model_trained = model.fit(trainDF)
+
+# prediction = model_trained.transform(testDF)
+#
+# metrics = ComputeModelStatistics(evaluationMetric='AUC',
+#                                  labelCol='label',
+#                                  scoredLabelsCol=None,
+#                                  scoresCol=None).transform(prediction)
+# metrics.select('accuracy').show()
 
 # >>> d = [{'name': 'Alice', 'age': 1}]
 # >>> spark.createDataFrame(d).collect()
 
-
-# FEATURES IMPORTANCES
-# for i, j in zip(model.getFeatureImportances(), train_cols):
-#     if i > 0:
-#         print(i,j)
