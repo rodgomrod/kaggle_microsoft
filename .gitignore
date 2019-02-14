@@ -5,3 +5,7 @@
 /jars/
 
 Notebooks/\.ipynb_checkpoints/
+
+Notebooks/\.DS_Store
+
+\.DS_Store
