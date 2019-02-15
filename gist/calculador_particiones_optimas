@@ -1,0 +1,26 @@
+import os, glob
+
+def size_inc(file):
+    return os.path.getsize(file)/1024/1024
+
+def size_abs(p):
+    size = 0
+    files = glob.glob(p)
+    for file in files:
+        size += size_inc(file)
+    return size
+
+
+SA = size_abs(absolutas_path)
+SI_h = size_inc(fil_his)
+SI_v = size_inc(fil_vig)
+full_size = SA+SI_h+SI_v
+P = full_size//64
+
+conf = SparkConf()
+cores = multiprocessing.cpu_count()
+conf = SparkConf()
+conf.set("spark.sql.shuffle.partitions", int(P))
+conf.set("spark.default.parallelism", int(P))
+sc = SparkContext(conf=conf)
+
