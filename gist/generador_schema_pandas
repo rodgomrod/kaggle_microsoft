@@ -1,7 +1,7 @@
 for c in cols:
     maximo = train.select(c).agg(max(col(c))).collect()[0][0]
-    if maximo > 2**8:
-            if maximo > 2**16:
+    if maximo > 2**7:
+            if maximo > 2**15:
                     print("'{}': np.int32,".format(c))
             else:
                     print("'{}': np.int16,".format(c))
