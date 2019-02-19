@@ -11,13 +11,16 @@ import sys
 
 print('Inicio del Script\n')
 
-# Configuracion de memoria y cores
-cores = (multiprocessing.cpu_count())
+# =============================================================================
+# Configuracion de memoria y nº particiones
+# =============================================================================
+cores = multiprocessing.cpu_count()
 p = 2
-particiones = cores * p
 conf = SparkConf()
-conf.set("spark.sql.shuffle.partitions", particiones)
-conf.set("spark.default.parallelism", particiones)
+conf.set("spark.driver.cores", cores)
+conf.set("spark.driver.memory", "55g")
+conf.set("spark.sql.shuffle.partitions", p * cores)
+conf.set("spark.default.parallelism", p * cores)
 sc = SparkContext(conf=conf)
 
 
