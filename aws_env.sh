@@ -11,12 +11,14 @@ mkdir data
 
 cd ..
 
-mv train.csv /kaggle_microsoft/data/train.csv
+mv train.csv kaggle_microsoft/data/train.csv
 
-mv test.csv /kaggle_microsoft/data/test.csv
+mv test.csv kaggle_microsoft/data/test.csv
 
 cd kaggle_microsoft
 
-chmod +x tablon2.sh
+chmod +x tablon_amazon.sh
 
-./tablon2.sh
+source enviroment.sh
+
+./tablon_amazon.sh
