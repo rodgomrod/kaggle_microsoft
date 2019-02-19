@@ -133,7 +133,7 @@ imputaciones = {
 
 final_data = data_final.fillna(imputaciones)
 
-write_path = 'data/df_cat_prepro_0/'
+write_path = 'data/df_cat_prepro_0'
 print('Guardamos el DF en {}'.format(write_path))
 # final_data = data.select(['MachineIdentifier'] + cols_transformadas)
 final_data.write.csv(write_path, sep=',', mode="overwrite", header=True)

@@ -111,7 +111,7 @@ for c in ['Census_OSVersion', 'Census_OSBranch', 'EngineVersion', 'AppVersion', 
     data = data.drop(c)
 
 
-write_path = 'data/df_cat_pro_0/'
+write_path = 'data/df_cat_pro_0'
 print('Guardamos el DF en {}\n'.format(write_path))
 # final_data = data.select(['MachineIdentifier'] + cols_transformadas)
 data.write.csv(write_path, sep=',', mode="overwrite", header=True)
