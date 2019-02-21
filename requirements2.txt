@@ -1,7 +1,0 @@
-pandas
-scikit-learn
-jupyter
-matplotlib
-lightgbm
-xgboost
-pyspark
