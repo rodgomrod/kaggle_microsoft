@@ -1,0 +1,15 @@
+
+
+## De local a Amazon
+
+scp -i "~/.ssh/amazon.pem" train.csv ubuntu@__DNS_MAQUINA__:~
+
+scp -i "~/.ssh/amazon.pem" test.csv ubuntu@__DNS_MAQUINA__:~
+
+
+
+## De amazon al local
+
+scp -i "~/.ssh/amazon.pem" ubuntu@__DNS_MAQUINA__:/home/ubuntu/kaggle_microsoft/Notebooks/lista0.csv /Users/csevilla/Desktop/recibir
+
+scp -i "~/.ssh/amazon.pem" ubuntu@__DNS_MAQUINA__:/home/ubuntu/kaggle_microsoft/Notebooks/lista1.csv /Users/csevilla/Desktop/recibir
