@@ -1,8 +1,8 @@
 
 
-git clone https://github.com/rodgomrod/kaggle_microsoft
+#git clone https://github.com/rodgomrod/kaggle_microsoft
 
-cd kaggle_microsoft
+#cd kaggle_microsoft
 
 pip3 install -r requirements2.txt
 
