@@ -20,7 +20,7 @@ sc = SparkContext(conf=conf)
 # SparkSession
 spark = SparkSession.builder.appName('MK_genera_train_test').getOrCreate()
 
-df_num = spark.read.csv('data/df_num_imputed_0/*.csv', header=True, inferSchema=True)
+df_num = spark.read.csv('data/df_num_imputed_2/*.csv', header=True, inferSchema=True)
 # df_num.persist()
 # df_num.count()
 
@@ -33,7 +33,7 @@ cat_cols = ['MachineIdentifier', 'Census_InternalBatteryType_informed', 'Product
             'Census_OSWUAutoUpdateOptionsName_index', 'Census_GenuineStateName_index', 'Census_ActivationChannel_index',
             'Census_FlightRing_index']
 
-df_cat = spark.read.csv('data/df_cat_pro_0/*.csv', header=True, inferSchema=True).select(cat_cols)
+df_cat = spark.read.csv('data/df_cat_pro_2/*.csv', header=True, inferSchema=True).select(cat_cols)
 # df_cat.persist()
 # df_cat.count()
 
