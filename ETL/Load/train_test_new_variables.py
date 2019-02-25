@@ -9,7 +9,7 @@ import multiprocessing
 # Configuracion de memoria y nº particiones
 # =============================================================================
 cores = multiprocessing.cpu_count()
-p = 2
+p = 20
 conf = SparkConf()
 # conf.set("spark.driver.cores", cores)
 conf.set("spark.driver.memory", "12g")
