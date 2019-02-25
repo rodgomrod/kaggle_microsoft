@@ -37,7 +37,7 @@ df_cat = spark.read.csv('data/df_cat_pro_0/*.csv', header=True, inferSchema=True
 # df_cat.persist()
 # df_cat.count()
 
-df_dates = spark.read.csv('data/df_dates_0/*.csv', header=True, inferSchema=True)
+df_dates = spark.read.csv('data/df_dates_2/*.csv', header=True, inferSchema=True)
 
 full_df_1 = df_num.join(df_cat, ['MachineIdentifier'])
 
