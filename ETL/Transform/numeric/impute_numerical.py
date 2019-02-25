@@ -41,26 +41,26 @@ imputaciones = \
  'AVProductStatesIdentifier': 1, # el minimo es 2, metemos los null en el 1
  'AVProductsInstalled': 8, # el maximo es 7
  'AVProductsEnabled': 6, # el maximo es 5
- 'CityIdentifier': -99,
- 'OrganizationIdentifier': -99,
+ 'CityIdentifier': -1,
+ 'OrganizationIdentifier': -1,
  'GeoNameIdentifier': 277, # Imputamos por la moda
  'IsProtected': 2, # es 1 o 0, lo metemos en 2 (unknown)
  'SMode': 2, # igual
- 'IeVerIdentifier': -99,
+ 'IeVerIdentifier': -1,
  'Firewall': 2,
- 'UacLuaenable': -99,
+ 'UacLuaenable': -1,
  'Census_OEMNameIdentifier': 0,
  'Census_OEMModelIdentifier': 0,
- 'Census_ProcessorCoreCount': -99,
+ 'Census_ProcessorCoreCount': -1,
  'Census_ProcessorManufacturerIdentifier': 0,
  'Census_ProcessorModelIdentifier': 0,
- 'Census_PrimaryDiskTotalCapacity': -99,
- 'Census_SystemVolumeTotalCapacity': -99,
- 'Census_TotalPhysicalRAM': -99,
- 'Census_InternalPrimaryDiagonalDisplaySizeInInches': -99,
- 'Census_InternalPrimaryDisplayResolutionHorizontal': -99,
- 'Census_InternalPrimaryDisplayResolutionVertical': -99,
- 'Census_InternalBatteryNumberOfCharges': -99,
+ 'Census_PrimaryDiskTotalCapacity': -1,
+ 'Census_SystemVolumeTotalCapacity': -1,
+ 'Census_TotalPhysicalRAM': -1,
+ 'Census_InternalPrimaryDiagonalDisplaySizeInInches': -1,
+ 'Census_InternalPrimaryDisplayResolutionHorizontal': -1,
+ 'Census_InternalPrimaryDisplayResolutionVertical': -1,
+ 'Census_InternalBatteryNumberOfCharges': -1,
  'Census_OSInstallLanguageIdentifier': 0,
  'Census_IsFlightingInternal': 2,
  'Census_IsFlightsDisabled': 2,
@@ -77,5 +77,5 @@ imputaciones = \
 df_imputado = df_num.fillna(imputaciones)
 
 # Guardamos el DF imputado
-write_path = 'data/df_num_imputed_0'
+write_path = 'data/df_num_imputed_2'
 df_imputado.write.csv(write_path, sep=',', mode="overwrite", header=True)
