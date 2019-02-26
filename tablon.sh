@@ -16,6 +16,10 @@ echo -e "\e[92m\e[5mImputamos valores numericos\e[0m"
 python3 ETL/Transform/numeric/impute_numerical.py
 echo ""
 
+echo -e "\e[92m\e[5mCreamos variables KMeans\e[0m"
+python3 ETL/Transform/numeric/kmeans.py
+echo ""
+
 echo -e "\e[92m\e[5mProcesamos variables de fechas\e[0m"
 python3 ETL/Transform/dates/dates.py
 echo ""
