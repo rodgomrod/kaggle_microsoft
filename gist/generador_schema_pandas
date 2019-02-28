@@ -1,3 +1,14 @@
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName('generador_schema').getOrCreate()
+train_path = 'train_final_2/*.csv'
+train = spark.read.csv(train_path, header=True, inferSchema=True)
+
+train.persist()
+print(train.count(), '\n')
+
+cols = train.columns
+cols.remove('MachineIdentifier')
+
 for c in cols:
     maximo = train.select(c).agg(max(col(c))).collect()[0][0]
     if maximo > 2**7:

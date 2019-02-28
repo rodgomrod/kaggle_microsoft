@@ -16,16 +16,18 @@ print('Inicio del Script\n')
 # Configuracion de memoria y nº particiones
 # =============================================================================
 cores = multiprocessing.cpu_count()
-p = 20
-conf = SparkConf()
-conf.set("spark.driver.cores", cores)
-conf.set("spark.driver.memory", "12g")
-conf.set("spark.sql.shuffle.partitions", p * cores)
-conf.set("spark.default.parallelism", p * cores)
-sc = SparkContext(conf=conf)
+p = 3
+# conf = SparkConf()
+# conf.set("spark.driver.cores", cores)
+# conf.set("spark.driver.memory", "12g")
+# conf.set("spark.sql.shuffle.partitions", p * cores)
+# conf.set("spark.default.parallelism", p * cores)
+# sc = SparkContext(conf=conf)
 
 
 spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
+spark.conf.set("spark.sql.shuffle.partitions", p * cores)
+spark.conf.set("spark.default.parallelism", p * cores)
 
 data = spark.read.csv('data/df_cat_prepro_0/*.csv', header=True, inferSchema=True)
 
@@ -53,6 +55,8 @@ cols_le.remove('OsVer')
 data = data.withColumn('Census_InternalBatteryType_informed',
                        when(col('Census_InternalBatteryType').isNotNull(),1).otherwise(0))
 
+cols_le.remove('Census_InternalBatteryType')
+
 print('\Pipeline de Indexers paras las columnas {0}\n'.format(cols_le))
 indexers = [StringIndexer(inputCol=c, outputCol=c+"_index", handleInvalid="keep").fit(data) for c in cols_le]
 # encoders = [OneHotEncoder(inputCol=c+"_index", outputCol=c+"_vec") for c in cols_le]
@@ -74,6 +78,8 @@ for c in cols_le:
 # Eliminamos las columnas originales
 for c in cols_le:
     data = data.drop(c)
+
+data = data.drop('Census_InternalBatteryType')
 
 print("Persist intermedio 0\n")
 data.persist()

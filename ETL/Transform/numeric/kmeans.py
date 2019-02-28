@@ -41,7 +41,7 @@ for k in ks:
                                ['MachineIdentifier'])
 
 
-write_path = 'data/df_kmeans'
+write_path = 'data/df_kmeans_2'
 
 print('Guardando CSV en {}'.format(write_path))
 df_kmeans.write.csv(write_path, sep=',', mode="overwrite", header=True)
