@@ -10,7 +10,7 @@ path = 'data/test.csv'
 save_feature_importances = 1
 
 # Para full test quitar el nrows
-test = pd.read_csv(path, low_memory=True, nrows=100000)
+test = pd.read_csv(path, low_memory=True, nrows=10000)
 test = test.fillna(0)
 
 sel_cols = [c for c in test.columns if c not in ['MachineIdentifier',

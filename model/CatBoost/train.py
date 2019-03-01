@@ -14,7 +14,7 @@ save_feature_importances = 1
 
 print('Cargando datos del TRAIN')
 # Para full train quitar el nrows
-train = pd.read_csv(path, low_memory=True, nrows=100000)
+train = pd.read_csv(path, low_memory=True, nrows=10000)
 train = train.fillna(0)
 
 sel_cols = [c for c in train.columns if c not in ['MachineIdentifier',
