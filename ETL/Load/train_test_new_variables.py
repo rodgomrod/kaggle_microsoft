@@ -45,11 +45,19 @@ df_kmeans = spark.read.csv('data/df_kmeans_2/*.csv', header=True, inferSchema=Tr
 df_kmeans.persist()
 df_kmeans.count()
 
+df_avsigver = spark.read.csv('data/df_avsig_version/*.csv', header=True, inferSchema=True)
+df_avsigver.persist()
+df_avsigver.count()
+
+
 full_df_1 = df_num.join(df_cat, ['MachineIdentifier'])
 
 full_df2 = full_df_1.join(df_dates, ['MachineIdentifier'])
 
-full_df = full_df2.join(df_kmeans, ['MachineIdentifier'])
+full_df3 = full_df2.join(df_kmeans, ['MachineIdentifier'])
+
+full_df = full_df3.join(df_avsigver, ['MachineIdentifier'])
+
 
 full_df.persist()
 full_df.count()
