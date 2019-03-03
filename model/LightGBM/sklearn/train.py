@@ -406,7 +406,7 @@ gc.collect()
 
 if save_feature_importances:
     importance_df = pd.DataFrame()
-    importance_df["importance"] = lgb_model.feature_importance(importance_type='gain')
+    importance_df["importance"] = lgb_model.feature_importances_(importance_type='gain')
     importance_df["feature"] = sel_cols
 
     plt.figure(figsize=(14, 25))

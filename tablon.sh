@@ -48,3 +48,14 @@ echo -e "\e[92m\e[5mPredicciones de CatBoost\e[0m"
 python3 model/CatBoost/test.py
 echo ""
 
+echo -e "\e[92m\e[5mSubmitting predictions\e[0m"
+kaggle competitions submit -c microsoft-malware-prediction -f submissions/catboost_raw.csv -m "CatBoost raw depth=9,  iterations=600,
+    eval_metric='AUC',
+    random_seed=42,
+    logging_level='Verbose',
+    allow_writing_files=False,
+    metric_period=50,
+    early_stopping_rounds=20,
+    learning_rate=0.1,
+    bagging_temperature=0.9"
+echo ""
