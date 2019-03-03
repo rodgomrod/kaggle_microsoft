@@ -10,14 +10,14 @@ import multiprocessing
 # =============================================================================
 # Configuracion de memoria y nº particiones
 # =============================================================================
-cores = multiprocessing.cpu_count()
-p = 20
-conf = SparkConf()
-conf.set("spark.driver.cores", cores)
-conf.set("spark.driver.memory", "12g")
-conf.set("spark.sql.shuffle.partitions", p * cores)
-conf.set("spark.default.parallelism", p * cores)
-sc = SparkContext(conf=conf)
+# cores = multiprocessing.cpu_count()
+# p = 20
+# conf = SparkConf()
+# conf.set("spark.driver.cores", cores)
+# conf.set("spark.driver.memory", "12g")
+# conf.set("spark.sql.shuffle.partitions", p * cores)
+# conf.set("spark.default.parallelism", p * cores)
+# sc = SparkContext(conf=conf)
 
 # Inicio de la sesion de Spark
 spark = SparkSession.builder.appName('separador_cat_num').getOrCreate()
