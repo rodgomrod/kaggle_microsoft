@@ -5,6 +5,7 @@
 /jars/
 /submissions/
 /saved_models/
+/importances/
 
 Notebooks/\.ipynb_checkpoints/
 
