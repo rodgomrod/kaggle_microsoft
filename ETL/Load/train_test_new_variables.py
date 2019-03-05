@@ -20,7 +20,7 @@ import multiprocessing
 # SparkSession
 spark = SparkSession.builder.appName('MK_genera_train_test').getOrCreate()
 
-df_num = spark.read.csv('data/df_num_imputed_2/*.csv', header=True, inferSchema=True)
+df_num = spark.read.csv('data/df_num_imputed_3/*.csv', header=True, inferSchema=True)
 df_num.persist()
 df_num.count()
 
@@ -33,41 +33,44 @@ df_num.count()
 #             'Census_OSWUAutoUpdateOptionsName_index', 'Census_GenuineStateName_index', 'Census_ActivationChannel_index',
 #             'Census_FlightRing_index']
 
-df_cat = spark.read.csv('data/df_cat_pro_2/*.csv', header=True, inferSchema=True)
-df_cat.persist()
-df_cat.count()
+df_cat = spark.read.csv('data/df_cat_pro_3/*.csv', header=True, inferSchema=True)
+# df_cat.persist()
+# df_cat.count()
 
 df_dates = spark.read.csv('data/df_dates_2/*.csv', header=True, inferSchema=True)
-df_dates.persist()
-df_dates.count()
+# df_dates.persist()
+# df_dates.count()
 
 df_kmeans = spark.read.csv('data/df_kmeans_2/*.csv', header=True, inferSchema=True)
-df_kmeans.persist()
-df_kmeans.count()
+# df_kmeans.persist()
+# df_kmeans.count()
 
 df_avsigver = spark.read.csv('data/df_avsig_version/*.csv', header=True, inferSchema=True)
-df_avsigver.persist()
-df_avsigver.count()
+# df_avsigver.persist()
+# df_avsigver.count()
 
 
-full_df_1 = df_num.join(df_cat, ['MachineIdentifier'])
+full_df = df_num.join(df_cat, ['MachineIdentifier'])\
+                .join(df_dates, ['MachineIdentifier'])\
+                .join(df_kmeans, ['MachineIdentifier'])\
+                .join(df_avsigver, ['MachineIdentifier'])
 
-full_df2 = full_df_1.join(df_dates, ['MachineIdentifier'])
+# full_df2 = full_df_1.join(df_dates, ['MachineIdentifier'])
+#
+# full_df3 = full_df2.join(df_kmeans, ['MachineIdentifier'])
+#
+# full_df = full_df3.join(df_avsigver, ['MachineIdentifier'])
 
-full_df3 = full_df2.join(df_kmeans, ['MachineIdentifier'])
 
-full_df = full_df3.join(df_avsigver, ['MachineIdentifier'])
-
-
-full_df.persist()
-full_df.count()
+# full_df.persist()
+# full_df.count()
 
 train = full_df.filter(col('HasDetections').isNotNull())
 train = train.fillna(-1)
 test = full_df.filter(col('HasDetections').isNull())
 test = test.fillna(-1)
 
-write_path_train = 'data/train_final_2'
-write_path_test = 'data/test_final_2'
+write_path_train = 'data/train_final_3'
+write_path_test = 'data/test_final_3'
 train.write.csv(write_path_train, sep=',', mode="overwrite", header=True)
 test.write.csv(write_path_test, sep=',', mode="overwrite", header=True)

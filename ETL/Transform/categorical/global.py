@@ -31,12 +31,13 @@ spark.conf.set("spark.default.parallelism", p * cores)
 
 data = spark.read.csv('data/df_cat_prepro_0/*.csv', header=True, inferSchema=True)
 
-drop_cols = ['Census_OSArchitecture', 'OsPlatformSubRelease',
-             'Census_OSEdition', 'Census_OSUILocaleIdentifier',
-             'OsBuildLab']
-
-for c in drop_cols:
-    data = data.drop(c)
+# Por ahora no vamos a dropearlas:
+# drop_cols = ['Census_OSArchitecture', 'OsPlatformSubRelease',
+#              'Census_OSEdition', 'Census_OSUILocaleIdentifier',
+#              'OsBuildLab']
+#
+# for c in drop_cols:
+#     data = data.drop(c)
 
 # Transformaciones
 print('Inicio de las transformaciones:\n')
@@ -55,63 +56,76 @@ cols_le.remove('OsVer')
 data = data.withColumn('Census_InternalBatteryType_informed',
                        when(col('Census_InternalBatteryType').isNotNull(),1).otherwise(0))
 
-cols_le.remove('Census_InternalBatteryType')
-
 print('\Pipeline de Indexers paras las columnas {0}\n'.format(cols_le))
 indexers = [StringIndexer(inputCol=c, outputCol=c+"_index", handleInvalid="keep").fit(data) for c in cols_le]
-# encoders = [OneHotEncoder(inputCol=c+"_index", outputCol=c+"_vec") for c in cols_le]
-# stgs = indexers + encoders
 pipeline = Pipeline(stages=indexers)
 data = pipeline.fit(data).transform(data)
+data = data.drop(*cols_le)
 
-data.persist()
-data.count()
-
-print('Transformacion variables Dummies\n')
-# Variables "DUMMIES"
-for c in cols_le:
-    dsts = data.select(c).distinct().rdd.flatMap(lambda x: x).collect()
-    for ty in dsts:
-        data = data.withColumn(c+'_'+ty, when(col(c) == ty, 1).otherwise(0))
-
-
-# Eliminamos las columnas originales
-for c in cols_le:
-    data = data.drop(c)
-
-data = data.drop('Census_InternalBatteryType')
+# Por ahora no vamos hacer variables dummies:
+# print('Transformacion variables Dummies\n')
+# # Variables "DUMMIES"
+# for c in cols_le:
+#     dsts = data.select(c).distinct().rdd.flatMap(lambda x: x).collect()
+#     for ty in dsts:
+#         data = data.withColumn(c+'_'+ty, when(col(c) == ty, 1).otherwise(0))
 
 print("Persist intermedio 0\n")
 data.persist()
 print(data.first())
 
 # Transformamos las columnas de versiones "x.y.z.t"
+# Conversion a LabelEncoding
 
-print('Transformacion columnas de versiones\n')
+# print('Transformacion columnas de versiones\n')
 print('\tCensus_OSVersion\n')
-data = data.withColumn('Census_OSVersion_0', split(data['Census_OSVersion'], '\.')[0].cast(IntegerType()))\
-.withColumn('Census_OSVersion_1', split(data['Census_OSVersion'], '\.')[1].cast(IntegerType()))\
-.withColumn('Census_OSVersion_2', split(data['Census_OSVersion'], '\.')[2].cast(IntegerType()))\
-.withColumn('Census_OSVersion_3', split(data['Census_OSVersion'], '\.')[3].cast(IntegerType()))
+# data = data.withColumn('Census_OSVersion_0', split(data['Census_OSVersion'], '\.')[0].cast(IntegerType()))\
+# .withColumn('Census_OSVersion_1', split(data['Census_OSVersion'], '\.')[1].cast(IntegerType()))\
+# .withColumn('Census_OSVersion_2', split(data['Census_OSVersion'], '\.')[2].cast(IntegerType()))\
+# .withColumn('Census_OSVersion_3', split(data['Census_OSVersion'], '\.')[3].cast(IntegerType()))
+data = data.withColumn('Census_OSVersion_0', concat(split(data['Census_OSVersion'], '\.')[0],
+                                                split(data['Census_OSVersion'], '\.')[1]))\
+    .withColumn('Census_OSVersion_1', concat(split(data['Census_OSVersion'], '\.')[0],
+                                     split(data['Census_OSVersion'], '\.')[1],
+                                     split(data['Census_OSVersion'], '\.')[2]))
 
 print('\tEngineVersion\n')
-data = data.withColumn('EngineVersion_2', split(data['EngineVersion'], '\.')[2].cast(IntegerType()))\
-.withColumn('EngineVersion_3', split(data['EngineVersion'], '\.')[3].cast(IntegerType()))
+# data = data.withColumn('EngineVersion_2', split(data['EngineVersion'], '\.')[2].cast(IntegerType()))\
+# .withColumn('EngineVersion_3', split(data['EngineVersion'], '\.')[3].cast(IntegerType()))
+data = data.withColumn('EngineVersion_0', split(data['EngineVersion'], '\.')[2])\
+.withColumn('EngineVersion_1', concat(split(data['EngineVersion'], '\.')[2],
+                                      split(data['EngineVersion'], '\.')[3]))
 
-data = data.withColumn('AppVersion_1', split(data['AppVersion'], '\.')[1].cast(IntegerType()))\
-.withColumn('AppVersion_2', split(data['AppVersion'], '\.')[2].cast(IntegerType()))\
-.withColumn('AppVersion_3', split(data['AppVersion'], '\.')[3].cast(IntegerType()))
+print('\tAppVersion\n')
+# data = data.withColumn('AppVersion_1', split(data['AppVersion'], '\.')[1].cast(IntegerType()))\
+# .withColumn('AppVersion_2', split(data['AppVersion'], '\.')[2].cast(IntegerType()))\
+# .withColumn('AppVersion_3', split(data['AppVersion'], '\.')[3].cast(IntegerType()))
+data = data.withColumn('AppVersion_0', concat(split(data['AppVersion'], '\.')[1],
+                                                split(data['AppVersion'], '\.')[2]))\
+    .withColumn('AppVersion_1', concat(split(data['AppVersion'], '\.')[1],
+                                     split(data['AppVersion'], '\.')[2],
+                                     split(data['AppVersion'], '\.')[3]))
 
 print('\tAvSigVersion\n')
-data = data.withColumn('AvSigVersion_0', split(data['AvSigVersion'], '\.')[0].cast(IntegerType()))\
-.withColumn('AvSigVersion_1', split(data['AvSigVersion'], '\.')[1].cast(IntegerType()))\
-.withColumn('AvSigVersion_2', split(data['AvSigVersion'], '\.')[2].cast(IntegerType()))
+# data = data.withColumn('AvSigVersion_0', split(data['AvSigVersion'], '\.')[0].cast(IntegerType()))\
+# .withColumn('AvSigVersion_1', split(data['AvSigVersion'], '\.')[1].cast(IntegerType()))\
+# .withColumn('AvSigVersion_2', split(data['AvSigVersion'], '\.')[2].cast(IntegerType()))
+data = data.withColumn('AvSigVersion_0', concat(split(data['AvSigVersion'], '\.')[0],
+                                                split(data['AvSigVersion'], '\.')[1]))\
+    .withColumn('AvSigVersion_1', concat(split(data['AvSigVersion'], '\.')[0],
+                                     split(data['AvSigVersion'], '\.')[1],
+                                     split(data['AvSigVersion'], '\.')[2]))
 
 print('\tOsVer\n')
-data = data.withColumn('OsVer_0', split(data['OsVer'], '\.')[0].cast(IntegerType()))\
-.withColumn('OsVer_1', split(data['OsVer'], '\.')[1].cast(IntegerType()))\
-.withColumn('OsVer_2', split(data['OsVer'], '\.')[2].cast(IntegerType()))\
-.withColumn('OsVer_3', split(data['OsVer'], '\.')[3].cast(IntegerType()))
+# data = data.withColumn('OsVer_0', split(data['OsVer'], '\.')[0].cast(IntegerType()))\
+# .withColumn('OsVer_1', split(data['OsVer'], '\.')[1].cast(IntegerType()))\
+# .withColumn('OsVer_2', split(data['OsVer'], '\.')[2].cast(IntegerType()))\
+# .withColumn('OsVer_3', split(data['OsVer'], '\.')[3].cast(IntegerType()))
+data = data.withColumn('OsVer_0', concat(split(data['OsVer'], '\.')[0],
+                                                split(data['OsVer'], '\.')[1]))\
+    .withColumn('OsVer_1', concat(split(data['OsVer'], '\.')[0],
+                                     split(data['OsVer'], '\.')[1],
+                                     split(data['OsVer'], '\.')[2]))
 
 # print('\tOsBuildLab\n')
 # data = data.withColumn('OsBuildLab_0', split(data['OsBuildLab'], '\.')[0].cast(IntegerType()))\
@@ -133,11 +147,17 @@ data = data.withColumn('OsVer_0', split(data['OsVer'], '\.')[0].cast(IntegerType
 # for c in columnas_indexer:
 #     data = data.drop(c)
 
-for c in ['Census_OSVersion', 'Census_OSBranch', 'EngineVersion', 'AppVersion', 'AvSigVersion', 'OsBuildLab', 'OsVer']:
-    data = data.drop(c)
+drop_cols_2 = ['Census_OSVersion', 'EngineVersion', 'AppVersion', 'AvSigVersion', 'OsVer', 'Census_OSVersion_0', 'Census_OSVersion_1',
+               'EngineVersion_0', 'EngineVersion_1', 'AppVersion_0', 'AppVersion_1', 'AvSigVersion_0', 'AvSigVersion_1', 'OsVer_0', 'OsVer_1']
+
+indexers = [StringIndexer(inputCol=c, outputCol=c+"_index", handleInvalid="keep").fit(data) for c in drop_cols_2]
+pipeline = Pipeline(stages=indexers)
+data = pipeline.fit(data).transform(data)
+
+data = data.drop(*drop_cols_2)
 
 
-write_path = 'data/df_cat_pro_2'
+write_path = 'data/df_cat_pro_3'
 print('Guardamos el DF en {}\n'.format(write_path))
 # final_data = data.select(['MachineIdentifier'] + cols_transformadas)
 data.write.csv(write_path, sep=',', mode="overwrite", header=True)
