@@ -31,8 +31,6 @@ df_num.persist()
 df_num.count()
 
 # Algunas medias y medianas para imputar
-# mediana_GeoNameIdentifier = df_num.approxQuantile("GeoNameIdentifier", [0.5], 0.25)[0]
-# media_RtpStateBitfield = df_num.agg(avg("RtpStateBitfield")).collect()[0][0]
 
 # Diccionario de imputaciones para todas las columnas que presentan valores nulos
 # Las numericas vamos a imputarlas por la mediana
@@ -52,20 +50,11 @@ imputaciones = \
      'UacLuaenable': -1,
      'Census_OEMNameIdentifier': 0,
      'Census_OEMModelIdentifier': 0,
-     # 'Census_ProcessorCoreCount': -1,
      'Census_ProcessorManufacturerIdentifier': 0,
      'Census_ProcessorModelIdentifier': 0,
-     # 'Census_PrimaryDiskTotalCapacity': -1,
-     # 'Census_SystemVolumeTotalCapacity': -1,
-     # 'Census_TotalPhysicalRAM': -1,
-     # 'Census_InternalPrimaryDiagonalDisplaySizeInInches': -1,
-     # 'Census_InternalPrimaryDisplayResolutionHorizontal': -1,
-     # 'Census_InternalPrimaryDisplayResolutionVertical': -1,
-     # 'Census_InternalBatteryNumberOfCharges': -1,
      'Census_OSInstallLanguageIdentifier': 0,
      'Census_IsFlightingInternal': 2,
      'Census_IsFlightsDisabled': 2,
-     # 'Census_ThresholdOptIn': 2,
      'Census_FirmwareManufacturerIdentifier': 0,
      'Census_FirmwareVersionIdentifier': 0,
      'Census_IsWIMBootEnabled': 2,
@@ -87,7 +76,7 @@ continuous_columns = [
 ]
 
 for c in continuous_columns:
-    imputaciones[c] = df_num.approxQuantile("GeoNameIdentifier", [0.5], 0.25)[0]
+    imputaciones[c] = df_num.approxQuantile(c, [0.5], 0.25)[0]
 
 # Realizamos la imputacion
 df_imputado = df_num.fillna(imputaciones)
