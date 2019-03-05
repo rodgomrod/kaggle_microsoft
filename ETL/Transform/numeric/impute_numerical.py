@@ -86,6 +86,7 @@ continuous_columns = [
     'Census_ThresholdOptIn'
 ]
 
+# Se utiliza la mediana, porque en valores poco informados, la mediana mete menos ruido al modelo que la media.
 for c in continuous_columns:
     imputaciones[c] = df_num.approxQuantile("GeoNameIdentifier", [0.5], 0.25)[0]
 

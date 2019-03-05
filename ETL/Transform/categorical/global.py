@@ -154,6 +154,7 @@ indexers = [StringIndexer(inputCol=c, outputCol=c+"_index", handleInvalid="keep"
 pipeline = Pipeline(stages=indexers)
 data = pipeline.fit(data).transform(data)
 
+# El * es para que itere sobre la lista, así nos ahorramos hacer un for. Si fuera un diccionario, se pone **
 data = data.drop(*drop_cols_2)
 
 
