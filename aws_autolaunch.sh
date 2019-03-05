@@ -4,7 +4,7 @@
 
 #cd kaggle_microsoft
 
-pip3 install -r requirements2.txt
+pip3 install -r requirements.txt
 
 mkdir data
 
