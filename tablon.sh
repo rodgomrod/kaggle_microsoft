@@ -8,9 +8,9 @@
 #python3 ETL/Preprocessing/categorical.py
 #echo ""
 
-echo -e "\e[92m\e[5mProcesamos variables categoricas\e[0m"
-python3 ETL/Transform/categorical/global.py
-echo ""
+#echo -e "\e[92m\e[5mProcesamos variables categoricas\e[0m"
+#python3 ETL/Transform/categorical/global.py
+#echo ""
 #
 echo -e "\e[92m\e[5mImputamos valores numericos\e[0m"
 python3 ETL/Transform/numeric/impute_numerical.py
@@ -24,9 +24,9 @@ echo ""
 #python3 ETL/Transform/dates/dates.py
 #echo ""
 #
-echo -e "\e[92m\e[5mProcesamos variable AvSigVersion extra\e[0m"
-python3 ETL/Transform/avsigver_extra_info/avsigversion_extra.py
-echo ""
+#echo -e "\e[92m\e[5mProcesamos variable AvSigVersion extra\e[0m"
+#python3 ETL/Transform/avsigver_extra_info/avsigversion_extra.py
+#echo ""
 
 echo -e "\e[92m\e[5mGeneramos TRAIN / TEST de las variables nuevas\e[0m"
 python3 ETL/Load/train_test_new_variables.py
