@@ -1,152 +1,115 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.window import Window
-from pyspark import SparkConf
-from pyspark import SparkContext
 from pyspark.sql.types import (StructType, StructField, StringType,
-                               DoubleType, IntegerType, LongType)
-import multiprocessing
-
-# conf = SparkConf()
-# cores = multiprocessing.cpu_count()
-# conf = SparkConf()
-# conf.set("spark.sql.shuffle.partitions", int(800))
-# conf.set("spark.default.parallelism", int(800))
-# # conf.set("spark.driver.cores", int(8))
-# # conf.set("spark.executor.cores ", int(8))
-# conf.set("spark.driver.memory", '15g')
-# # conf.set("spark.executor.memory", '15g')
-#
-# sc = SparkContext(conf=conf)
+                               DoubleType, IntegerType, LongType, DateType)
 
 spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
-spark.conf.set("spark.sql.shuffle.partitions", 160)
-spark.conf.set("spark.default.parallelism", 160)
-spark.conf.set("spark.shuffle.consolidateFiles", "false")
 
-df_num = spark.read.csv("data/df_cat_prepro_0/*.csv",inferSchema=True,header=True)\
-    .select('MachineIdentifier','Platform', 'OsBuildLab', 'AvSigVersion', 'Census_OSVersion')
-# df_num.persist()
-# df_num.count()
+df_num = spark.read.csv("data/df_cat_prepro_0/*.csv", header=True, inferSchema=True)\
+    .select('MachineIdentifier', 'OsBuildLab', 'AvSigVersion', 'Census_OSVersion')
+
 print('DF leido')
 
-df_fechas_av = spark.read.csv("Notebooks/new_variables/fechas_av.csv",inferSchema=True,header=True)
-df_fechas_os = spark.read.csv("Notebooks/new_variables/fechas_os.csv",inferSchema=True,header=True)
+df_fechas_av = spark.read.csv("Notebooks/new_variables/fechas_av.csv", inferSchema=True, header=True)
+df_fechas_os = spark.read.csv("Notebooks/new_variables/fechas_os.csv", inferSchema=True, header=True)
 
 df_fechas_os = df_fechas_os.withColumn('DateOSVersion', to_date(col('DateCensus_OSVersion')))
 df_fechas_av = df_fechas_av.withColumn('DateAvSigVersion', to_date(col('DateAvSigVersion')))
 
-# df_fechas_os.persist()
-# df_fechas_os.count()
-#
-# df_fechas_av.persist()
-# df_fechas_av.count()
-
 print('Fechas leidas')
 
-df_date_osbuild = df_num.withColumn('OsBuildLab_4', split(df_num['OsBuildLab'], '\.')[4].cast(StringType()))
-df_date_osbuild = df_date_osbuild.withColumn('OsBuildLab_date', split(df_date_osbuild['OsBuildLab_4'], '-')[0].cast(StringType()))
+df_date_osbuild = df_num.withColumn('OsBuildLab_4', split(df_num['OsBuildLab'], '\.')[4])
+df_date_osbuild = df_date_osbuild.withColumn('OsBuildLab_date', split(df_date_osbuild['OsBuildLab_4'], '-')[0])
 
 df_date_osbuild = df_date_osbuild.withColumn('DateOsBuildLab', to_date(col('OsBuildLab_date'), format='yyMMdd'))
 
 df_dates = df_date_osbuild.join(df_fechas_av, ['AvSigVersion'], 'left').select('MachineIdentifier',
-                                                                               'Platform',
                                                                                'DateOsBuildLab',
                                                                                'DateAvSigVersion',
                                                                                'Census_OSVersion')
 
-# df_dates.persist()
-# df_dates.count()
 
 df_dates = df_dates.join(df_fechas_os, ['Census_OSVersion'], 'left').select('MachineIdentifier',
-                                                                               'Platform',
-                                                                               'DateOsBuildLab',
-                                                                               'DateAvSigVersion',
-                                                                           'DateOSVersion').repartition(160, ['MachineIdentifier'])
+                                                                            'DateOsBuildLab',
+                                                                            'DateAvSigVersion',
+                                                                            'DateOSVersion')
 
-df_dates.persist()
-print(df_dates.count())
+# Funcion para el calculo del STD rapido
+def pySparkSTD(x, y, z):
+    if x == None:
+        x = 0
+    if y == None:
+        y = 0
+    if z == None:
+        z = 0
+    med = (x + y + z)/3
+    return ((((x-med)**2) + ((y-med)**2) + ((z-med)**2))/2)**(1/2)
 
-print("join entre dates y DF")
 
-w1 = Window.partitionBy('Platform').orderBy('DateOsBuildLab')
-w2 = Window.partitionBy('Platform').orderBy('DateAvSigVersion')
-w5 = Window.partitionBy('Platform').orderBy('DateOSVersion')
-w3 = Window.partitionBy('MachineIdentifier').orderBy('DateOsBuildLab')
-w4 = Window.partitionBy('MachineIdentifier').orderBy('DateAvSigVersion')
+udf_std = udf(pySparkSTD, DoubleType())
 
-data_windows = df_dates.withColumn('DateOsBuildLab_lag', lag('DateOsBuildLab').over(w1))
+w1 = Window.partitionBy().orderBy('DateOsBuildLab')
+w2 = Window.partitionBy().orderBy('DateAvSigVersion')
+w3 = Window.partitionBy().orderBy('DateOSVersion')
+
 print("window 1")
+data_windows = df_dates.withColumn('DateOsBuildLab_lag', lag('DateOsBuildLab').over(w1))
 data_windows = data_windows.withColumn('OsBuildLab_diff', datediff(col('DateOsBuildLab'), col('DateOsBuildLab_lag')))
-# data_windows.persist()
-# print(data_windows.count())
+data_windows = data_windows.withColumn('OsBuildLab_diff_lead', lead('OsBuildLab_diff').over(w1))
+data_windows = data_windows.withColumn('OsBuildLab_diff_lag', lag('OsBuildLab_diff').over(w1))
+data_windows = data_windows.withColumn('std_diff_DateOsBuildLab', udf_std('OsBuildLab_diff', 'OsBuildLab_diff_lead', 'OsBuildLab_diff_lag'))
+# print(data_windows.show())
 
-data_windows1 = data_windows.withColumn('DateAvSigVersion_lag', lag('DateAvSigVersion').over(w2))
 print("window 2")
+data_windows1 = data_windows.withColumn('DateAvSigVersion_lag', lag('DateAvSigVersion').over(w2))
 data_windows1 = data_windows1.withColumn('AvSigVersion_diff', datediff(col('DateAvSigVersion'), col('DateAvSigVersion_lag')))
-# data_windows.persist()
-# print(data_windows.count())
+data_windows1 = data_windows1.withColumn('AvSigVersion_diff_lead', lead('AvSigVersion_diff').over(w2))
+data_windows1 = data_windows1.withColumn('AvSigVersion_diff_lag', lag('AvSigVersion_diff').over(w2))
+data_windows1 = data_windows1.withColumn('std_diff_AvSigVersion', udf_std('AvSigVersion_diff', 'AvSigVersion_diff_lead', 'AvSigVersion_diff_lag'))
+# print(data_windows1.show())
 
-data_windows2 = data_windows1.withColumn('DateOSVersion_lag', lag('DateOSVersion').over(w5))
 print("window 3")
+data_windows2 = data_windows1.withColumn('DateOSVersion_lag', lag('DateOSVersion').over(w3))
 data_windows2 = data_windows2.withColumn('OSVersion_diff', datediff(col('DateOSVersion'), col('DateOSVersion_lag')))
-# data_windows.persist()
-# print(data_windows.count())
-
-data_windows3 = data_windows2.withColumn('DateOsBuildLab_fulllag', lag('DateOsBuildLab').over(w3))
-print("window 4")
-data_windows3 = data_windows3.withColumn('OSBuild_fulldiff', datediff(col('DateOsBuildLab'), col('DateOsBuildLab_fulllag')))
-# data_windows.persist()
-# print(data_windows.count())
-
-data_windows4 = data_windows3.withColumn('DateAvSigVersion_fulllag', lag('DateAvSigVersion').over(w4))
-print("window 5")
-data_windows4 = data_windows4.withColumn('AvSigVersion_fulldiff', datediff(col('DateAvSigVersion'), col('DateAvSigVersion_fulllag')))
-# data_windows.persist()
-# print(data_windows.count())
+data_windows2 = data_windows2.withColumn('OSVersion_diff_lead', lead('OSVersion_diff').over(w3))
+data_windows2 = data_windows2.withColumn('OSVersion_diff_lag', lag('OSVersion_diff').over(w3))
+data_windows2 = data_windows2.withColumn('std_diff_OSVersion', udf_std('OSVersion_diff', 'OSVersion_diff_lead', 'OSVersion_diff_lag'))
 
 
-df_max_date = data_windows4.groupBy('Platform').agg(max('DateOsBuildLab'),
-                                                    max('DateAvSigVersion'),
-                                                    max('DateOSVersion'),
-                                                    max('OsBuildLab_diff'),
-                                                    max('AvSigVersion_diff'),
-                                                    max('OSVersion_diff'),
-                                                    max('OSBuild_fulldiff'),
-                                                    max('AvSigVersion_fulldiff'))
+w4 = Window.partitionBy('DateOsBuildLab')
+w5 = Window.partitionBy('DateAvSigVersion')
+w6 = Window.partitionBy('DateOSVersion')
 
-df_date_max_date = data_windows4.join(df_max_date, ['Platform'], 'left').repartition(160, ['MachineIdentifier'])
-df_date_max_date.persist()
-print(df_date_max_date.count())
+df_max_diff = data_windows2.withColumn('max_OsBuildLab_diff', max('OsBuildLab_diff').over(w4))\
+                    .withColumn('max_AvSigVersion_diff', max('AvSigVersion_diff').over(w5))\
+                    .withColumn('max_OSVersion_diff', max('OSVersion_diff').over(w6))
+
 
 print("ultimo join")
 
-df_date_max_date_final = df_date_max_date.withColumn('OsBuildLab_difftotal', datediff(col('max(DateOsBuildLab)'), col('DateOsBuildLab')))\
-.withColumn('DateAvSigVersion_difftotal', datediff(col('max(DateAvSigVersion)'), col('DateAvSigVersion')))\
-.withColumn('DateOSVersion_difftotal', datediff(col('max(DateOSVersion)'), col('DateOSVersion')))\
-.withColumn('DateAvSigVersion_fulldifftotal', datediff(col('max(DateAvSigVersion)'), col('DateAvSigVersion_fulllag')))\
-.withColumn('OsBuildLab_fulldifftotal', datediff(col('max(DateOSVersion)'), col('DateOsBuildLab_fulllag')))\
-.withColumn('DateAvSigVersion_ratio', col('AvSigVersion_diff')/col('max(AvSigVersion_diff)'))\
-.withColumn('OsBuildLab_ratio', col('OsBuildLab_diff')/col('max(OsBuildLab_diff)'))\
-.withColumn('OSVersion_ratio', col('OSVersion_diff')/col('max(OSVersion_diff)'))\
-.withColumn('DateAvSigVersion_fullratio', col('AvSigVersion_fulldiff')/col('max(AvSigVersion_diff)'))\
-.withColumn('OsBuildLab_fullratio', col('OSBuild_fulldiff')/col('max(OSBuild_fulldiff)'))
-
-final_dates = df_date_max_date_final.withColumn('OsBuildLab_dayOfWeek', date_format('DateOsBuildLab', 'u'))\
-.withColumn('AvSigVersion_dayOfWeek', date_format('DateAvSigVersion', 'u'))
+df_max_diff_ratios = df_max_diff.withColumn('ratio_OsBuildLab_diff', col('max_OsBuildLab_diff')/col('OsBuildLab_diff'))\
+    .withColumn('ratio_AvSigVersion_diff', col('max_AvSigVersion_diff')/col('AvSigVersion_diff'))\
+    .withColumn('ratio_OSVersion_diff', col('max_OSVersion_diff')/col('OSVersion_diff'))
 
 
-drop_list = ['Platform', 'DateOsBuildLab', 'DateAvSigVersion', 'DateOsBuildLab_lag', 'DateOSVersion',
-             'DateOSVersion_lag', 'max(DateOSVersion)', 'max(OSVersion_diff)',
-             'DateAvSigVersion_lag', 'max(DateOsBuildLab)', 'max(DateAvSigVersion)',
-             'DateOsBuildLab_fulllag', 'DateAvSigVersion_fulllag', 'max(OsBuildLab_diff)',
-             'max(AvSigVersion_diff)', 'max(OSBuild_fulldiff)', 'max(AvSigVersion_fulldiff)']
+drop_list = [
+    'DateOSVersion_lag',
+    'OSVersion_diff_lead',
+    'OSVersion_diff_lag',
+    'DateOsBuildLab_lag',
+    'OsBuildLab_diff_lead',
+    'OsBuildLab_diff_lag',
+    'DateAvSigVersion_lag',
+    'AvSigVersion_diff_lead',
+    'AvSigVersion_diff_lag',
+    'DateOsBuildLab',
+    'DateAvSigVersion',
+    'DateOSVersion'
+]
 
-for c in drop_list:
-    final_dates = final_dates.drop(c)
+final_dates = df_max_diff_ratios.drop(*drop_list).fillna(0)
 
-final_dates_imputed = final_dates.fillna(0).repartition(160, ['MachineIdentifier'])
-
-write_path = 'data/df_dates_2'
+write_path = 'data/df_dates_3'
 print('Guardamos el DF en {}'.format(write_path))
-final_dates_imputed.write.csv(write_path, sep=',', mode="overwrite", header=True)
+final_dates.write.csv(write_path, sep=',', mode="overwrite", header=True)

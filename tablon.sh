@@ -23,35 +23,35 @@
 #echo -e "\e[92m\e[5mProcesamos variables de fechas\e[0m"
 #python3 ETL/Transform/dates/dates.py
 #echo ""
-#
+
 #echo -e "\e[92m\e[5mProcesamos variable AvSigVersion extra\e[0m"
 #python3 ETL/Transform/avsigver_extra_info/avsigversion_extra.py
 #echo ""
-#
+
 #echo -e "\e[92m\e[5mGeneramos TRAIN / TEST de las variables nuevas\e[0m"
 #python3 ETL/Load/train_test_new_variables.py
 #echo ""
 
-echo -e "\e[92m\e[5mEntrenamos modelo de LightGBM\e[0m"
-python3 model/LightGBM/sklearn/train.py
-echo ""
-
-echo -e "\e[92m\e[5mPredicciones de LightGBM\e[0m"
-python3 model/LightGBM/sklearn/test.py
-echo ""
-
-echo -e "\e[92m\e[5mSubmitting predictions\e[0m"
-kaggle competitions submit -c microsoft-malware-prediction -f submissions/lgbc_model_4.csv -m "Nuevos datos V3
-max_depth=15,
-                               n_estimators=10000,
-                               learning_rate=0.05,
-                               num_leaves=256,
-                               colsample_bytree=0.3,
-                               objective='binary',
-                               lambda_l1=0.1,
-                               lambda_l2=0.1,
-                               n_jobs=-1"
-echo ""
+#echo -e "\e[92m\e[5mEntrenamos modelo de LightGBM\e[0m"
+#python3 model/LightGBM/sklearn/train.py
+#echo ""
+#
+#echo -e "\e[92m\e[5mPredicciones de LightGBM\e[0m"
+#python3 model/LightGBM/sklearn/test.py
+#echo ""
+#
+#echo -e "\e[92m\e[5mSubmitting predictions\e[0m"
+#kaggle competitions submit -c microsoft-malware-prediction -f submissions/lgbc_model_4.csv -m "Nuevos datos V3
+#max_depth=15,
+#                               n_estimators=10000,
+#                               learning_rate=0.05,
+#                               num_leaves=256,
+#                               colsample_bytree=0.3,
+#                               objective='binary',
+#                               lambda_l1=0.1,
+#                               lambda_l2=0.1,
+#                               n_jobs=-1"
+#echo ""
 
 #echo -e "\e[92m\e[5mEntrenamos modelo de CatBoost\e[0m"
 #python3 model/CatBoost/train.py

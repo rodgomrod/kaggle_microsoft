@@ -10,13 +10,21 @@ df_num = spark.read \
 
 print('DF leido')
 
-cols_sel = df_num.columns
-cols_sel.remove('HasDetections')
-cols_sel.remove('MachineIdentifier')
+continuous_columns = [
+    'Census_ProcessorCoreCount',
+    'Census_PrimaryDiskTotalCapacity',
+    'Census_SystemVolumeTotalCapacity',
+    'Census_TotalPhysicalRAM',
+    'Census_InternalPrimaryDiagonalDisplaySizeInInches',
+    'Census_InternalPrimaryDisplayResolutionHorizontal',
+    'Census_InternalPrimaryDisplayResolutionVertical',
+    'Census_InternalBatteryNumberOfCharges',
+    'Census_ThresholdOptIn'
+]
 
 print('Convertimos el DF numerico a vector')
 
-assembler_features = VectorAssembler(inputCols=cols_sel, outputCol='features')
+assembler_features = VectorAssembler(inputCols=continuous_columns, outputCol='features')
 train_data = assembler_features.transform(df_num)
 train_data_final = train_data.select('features', 'MachineIdentifier')
 
