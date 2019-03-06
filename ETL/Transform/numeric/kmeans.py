@@ -6,7 +6,7 @@ spark = SparkSession.builder.appName('RF_trainer').getOrCreate()
 
 df_num = spark.read \
     .options(header = "true", sep=',', inferschema = "true") \
-    .csv('data/df_num_imputed_2/*.csv')
+    .csv('data/df_num_imputed_3/*.csv')
 
 print('DF leido')
 
