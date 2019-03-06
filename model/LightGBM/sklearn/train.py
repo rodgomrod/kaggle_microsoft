@@ -16,7 +16,7 @@ import gc
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from utils.schemas import dict_dtypes_onehot_schema
+from utils.schemas import dict_dtypes_onehot_schema, schema_train_3
 
 #Save importances:
 save_feature_importances = 1
@@ -24,11 +24,12 @@ save_feature_importances = 1
 #Dict para reducir memoria:
 
 print('Cargando datos del TRAIN')
-path = 'data/train_final_2'
+path = 'data/train_final_3'
 allFiles = glob.glob(path + "/*.csv")
 list_ = []
 for file_ in allFiles:
-    df = pd.read_csv(file_, dtype=dict_dtypes_onehot_schema, low_memory=True)
+    df = pd.read_csv(file_)
+    df = (df.fillna(-1)).astype(schema_train_3)
     list_.append(df)
 
 train = pd.concat(list_, axis = 0, ignore_index = True)
@@ -79,7 +80,7 @@ for train_index, test_index in skf.split(train_ids, y_train):
 print('Best score en el entrenamiento:', lgb_model.best_score_)
 
 print('Guardamos el modelo')
-joblib.dump(lgb_model, 'saved_models/lgbc_model_3.pkl')
+joblib.dump(lgb_model, 'saved_models/lgbc_model_4.pkl')
 del X_train
 del y_train
 gc.collect()
@@ -96,7 +97,7 @@ if save_feature_importances:
                                                ascending=False))
     plt.title('LightGBM Features')
     plt.tight_layout()
-    plt.savefig('importances/lgbc_model_3_importances.png')
+    plt.savefig('importances/lgbc_model_4_importances.png')
 
     importance_df.sort_values(by="importance", ascending=False) \
         .to_csv('importances/feature_importances_lgbc_model_3.csv', index=True)

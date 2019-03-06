@@ -4,6 +4,7 @@ from pyspark.sql.types import (StructType, StructField, StringType,
                                DoubleType, IntegerType, LongType)
 from pyspark.sql.functions import *
 from pyspark.ml import Pipeline
+from pyspark.sql.window import Window
 
 import multiprocessing
 
@@ -13,8 +14,6 @@ print('Inicio del Script\n')
 
 
 spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
-# spark.conf.set("spark.sql.shuffle.partitions", p * cores)
-# spark.conf.set("spark.default.parallelism", p * cores)
 
 data = spark.read.csv('Notebooks/new_variables/AVSigversion_Threats/AvSigversion_Threats.csv', header=True, inferSchema=True)
 
@@ -23,28 +22,24 @@ data = data.withColumnRenamed('Name','AvSigVersion_Name')\
         .withColumnRenamed('Type','AvSigVersion_Type')
 data = data.drop('index')
 
-df_num = spark.read.csv("data/df_cat_prepro_0/*.csv",inferSchema=True,header=True).select('MachineIdentifier','AvSigVersion')
+data_pro = data.groupBy('AvSigVersion')\
+    .agg(countDistinct('AvSigVersion_Name'),
+         countDistinct('AvSigVersion_Type'),
+         countDistinct('AvSigVersion_AlertLevel'))
+
+# w = Window.partitionBy('AvSigVersion')
+#
+# a = data.withColumn("count", count("AvSigVersion_AlertLevel").over(w)).orderBy("count", ascending=False)\
+#     .groupBy("AvSigVersion")\
+#     .agg(count("count").alias("AvSigVersion_Name_value"))
+
+df_num = spark.read.csv("data/df_cat_prepro_0/*.csv", header=True).select('MachineIdentifier','AvSigVersion')
+
+df_save = df_num.join(data_pro,'AvSigVersion', 'left_outer')
 
 
-
-data = data.withColumn('AvSigVersion_Name_1', split(data['AvSigVersion_Name'], ':')[0])\
-            .withColumn('AvSigVersion_Name_2', split(data['AvSigVersion_Name'], '/')[0])
-
-
-cols_label_encoder = ['AvSigVersion_AlertLevel','AvSigVersion_Type','AvSigVersion_Name_1','AvSigVersion_Name_2']
-
-
-print('Pipeline de Indexers paras las columnas {0}\n'.format(cols_label_encoder))
-indexers = [StringIndexer(inputCol=c, outputCol=c+"_index", handleInvalid="keep").fit(data) for c in cols_label_encoder]
-pipeline = Pipeline(stages=indexers)
-data = pipeline.fit(data).transform(data)
-
-
-
-df_save = df_num.join(data,'AvSigVersion','left')
-
-
-columns_for_save = ['MachineIdentifier','AvSigVersion_AlertLevel_index','AvSigVersion_Type_index','AvSigVersion_Name_1_index','AvSigVersion_Name_2_index']
+columns_for_save = ['MachineIdentifier','count(DISTINCT AvSigVersion_Name)','count(DISTINCT AvSigVersion_Type)',
+                    'count(DISTINCT AvSigVersion_AlertLevel)']
 write_path = 'data/df_avsig_version'
 
 print('Guardamos el DF en {}'.format(write_path))
