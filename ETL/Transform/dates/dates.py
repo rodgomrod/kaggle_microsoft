@@ -7,7 +7,7 @@ from pyspark.sql.types import (StructType, StructField, StringType,
 spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
 
 df_num = spark.read.csv("data/df_cat_prepro_0/*.csv", header=True, inferSchema=True)\
-    .select('MachineIdentifier', 'OsBuildLab', 'AvSigVersion', 'Census_OSVersion')
+    .select('MachineIdentifier', 'OsBuildLab', 'AvSigVersion', 'Census_OSVersion', 'OsPlatformSubRelease')
 
 print('DF leido')
 
@@ -27,13 +27,18 @@ df_date_osbuild = df_date_osbuild.withColumn('DateOsBuildLab', to_date(col('OsBu
 df_dates = df_date_osbuild.join(df_fechas_av, ['AvSigVersion'], 'left').select('MachineIdentifier',
                                                                                'DateOsBuildLab',
                                                                                'DateAvSigVersion',
-                                                                               'Census_OSVersion')
+                                                                               'Census_OSVersion',
+                                                                               'OsPlatformSubRelease')
 
 
 df_dates = df_dates.join(df_fechas_os, ['Census_OSVersion'], 'left').select('MachineIdentifier',
                                                                             'DateOsBuildLab',
                                                                             'DateAvSigVersion',
-                                                                            'DateOSVersion')
+                                                                            'DateOSVersion',
+                                                                            'OsPlatformSubRelease')
+
+df_dates.persist()
+df_dates.count()
 
 # Funcion para el calculo del STD rapido
 def pySparkSTD(x, y, z):
@@ -49,9 +54,9 @@ def pySparkSTD(x, y, z):
 
 udf_std = udf(pySparkSTD, DoubleType())
 
-w1 = Window.partitionBy().orderBy('DateOsBuildLab')
-w2 = Window.partitionBy().orderBy('DateAvSigVersion')
-w3 = Window.partitionBy().orderBy('DateOSVersion')
+w1 = Window.partitionBy('OsPlatformSubRelease').orderBy('DateOsBuildLab')
+w2 = Window.partitionBy('OsPlatformSubRelease').orderBy('DateAvSigVersion')
+w3 = Window.partitionBy('OsPlatformSubRelease').orderBy('DateOSVersion')
 
 print("window 1")
 data_windows = df_dates.withColumn('DateOsBuildLab_lag', lag('DateOsBuildLab').over(w1))
@@ -105,7 +110,8 @@ drop_list = [
     'AvSigVersion_diff_lag',
     'DateOsBuildLab',
     'DateAvSigVersion',
-    'DateOSVersion'
+    'DateOSVersion',
+    'OsPlatformSubRelease'
 ]
 
 final_dates = df_max_diff_ratios.drop(*drop_list).fillna(0)
