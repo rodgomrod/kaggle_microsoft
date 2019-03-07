@@ -3,7 +3,7 @@ from pyspark.sql.functions import *
 import numpy as np
 
 spark = SparkSession.builder.appName('generador_schema').getOrCreate()
-train_path = 'data/train_final_3/*.csv'
+train_path = 'data/test_final_4/*.csv'
 train = spark.read.csv(train_path, header=True, inferSchema=True)
 
 train.persist()

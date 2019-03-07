@@ -7,7 +7,8 @@ from pyspark.sql.types import (StructType, StructField, StringType,
 spark = SparkSession.builder.appName("Microsoft_Kaggle").getOrCreate()
 
 df_num = spark.read.csv("data/df_cat_prepro_0/*.csv", header=True, inferSchema=True)\
-    .select('MachineIdentifier', 'OsBuildLab', 'AvSigVersion', 'Census_OSVersion', 'OsPlatformSubRelease')
+    .select('MachineIdentifier', 'OsBuildLab', 'AvSigVersion', 'Census_OSVersion', 'Census_OSBranch',
+            'Census_OSEdition', 'SmartScreen')
 
 print('DF leido')
 
@@ -28,14 +29,18 @@ df_dates = df_date_osbuild.join(df_fechas_av, ['AvSigVersion'], 'left').select('
                                                                                'DateOsBuildLab',
                                                                                'DateAvSigVersion',
                                                                                'Census_OSVersion',
-                                                                               'OsPlatformSubRelease')
+                                                                               'Census_OSBranch',
+                                                                               'Census_OSEdition',
+                                                                               'SmartScreen')
 
 
 df_dates = df_dates.join(df_fechas_os, ['Census_OSVersion'], 'left').select('MachineIdentifier',
                                                                             'DateOsBuildLab',
                                                                             'DateAvSigVersion',
                                                                             'DateOSVersion',
-                                                                            'OsPlatformSubRelease')
+                                                                            'Census_OSBranch',
+                                                                            'Census_OSEdition',
+                                                                            'SmartScreen').repartition(80, ['MachineIdentifier'])
 
 df_dates.persist()
 df_dates.count()
@@ -54,9 +59,9 @@ def pySparkSTD(x, y, z):
 
 udf_std = udf(pySparkSTD, DoubleType())
 
-w1 = Window.partitionBy('OsPlatformSubRelease').orderBy('DateOsBuildLab')
-w2 = Window.partitionBy('OsPlatformSubRelease').orderBy('DateAvSigVersion')
-w3 = Window.partitionBy('OsPlatformSubRelease').orderBy('DateOSVersion')
+w1 = Window.partitionBy('Census_OSBranch', 'Census_OSEdition', 'SmartScreen').orderBy('DateOsBuildLab')
+w2 = Window.partitionBy('Census_OSBranch', 'Census_OSEdition', 'SmartScreen').orderBy('DateAvSigVersion')
+w3 = Window.partitionBy('Census_OSBranch', 'Census_OSEdition', 'SmartScreen').orderBy('DateOSVersion')
 
 print("window 1")
 data_windows = df_dates.withColumn('DateOsBuildLab_lag', lag('DateOsBuildLab').over(w1))
@@ -88,7 +93,10 @@ w6 = Window.partitionBy('DateOSVersion')
 
 df_max_diff = data_windows2.withColumn('max_OsBuildLab_diff', max('OsBuildLab_diff').over(w4))\
                     .withColumn('max_AvSigVersion_diff', max('AvSigVersion_diff').over(w5))\
-                    .withColumn('max_OSVersion_diff', max('OSVersion_diff').over(w6))
+                    .withColumn('max_OSVersion_diff', max('OSVersion_diff').over(w6))\
+                    .withColumn('max_OsBuildLab_std', max('std_diff_DateOsBuildLab').over(w4))\
+                    .withColumn('max_AvSigVersion_std', max('std_diff_AvSigVersion').over(w5))\
+                    .withColumn('max_OSVersion_std', max('std_diff_OSVersion').over(w6))
 
 
 print("ultimo join")
@@ -111,7 +119,9 @@ drop_list = [
     'DateOsBuildLab',
     'DateAvSigVersion',
     'DateOSVersion',
-    'OsPlatformSubRelease'
+    'Census_OSBranch',
+    'Census_OSEdition',
+    'SmartScreen'
 ]
 
 final_dates = df_max_diff_ratios.drop(*drop_list).fillna(0)
