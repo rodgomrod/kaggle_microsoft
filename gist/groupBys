@@ -1,0 +1,19 @@
+N1 = ['Census_OSEdition', 'SmartScreen', 'Census_OSBranch', 'Census_OSSkuName']
+
+N2 = ['Census_ChassisTypeName', 'Census_FlightRing', 'Census_MDC2FormFactor', 'ProductName']
+
+N3 = ['Census_PrimaryDiskTypeName', 'Census_PowerPlatformRoleName', 'Census_ProcessorClass']
+
+N4 = ['Processor', 'Census_OSInstallTypeName', 'OsVer', 'Census_GenuineStateName', 'PuaMode']
+
+N5 = ['Census_OSVersion', 'EngineVersion', 'AppVersion', 'AvSigVersion']
+
+N6 = ['Wdft_IsGamer', 'IsBeta', 'IsSxsPassiveMode', 'IsProtected', 'AVProductsEnabled',
+'AVProductsInstalled', 'HasTpm']
+
+N7 = ['DefaultBrowsersIdentifier', 'AVProductStatesIdentifier', 'CountryIdentifier',
+'CityIdentifier', 'OrganizationIdentifier', 'GeoNameIdentifier']
+
+N8 = ['Census_OEMNameIdentifier', 'Census_OEMModelIdentifier', 'Census_ProcessorManufacturerIdentifier',
+'Census_ProcessorModelIdentifier', 'Census_OSInstallLanguageIdentifier', 'Census_FirmwareVersionIdentifier',
+'Census_FirmwareManufacturerIdentifier']

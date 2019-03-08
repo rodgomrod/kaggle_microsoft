@@ -16,7 +16,7 @@ import gc
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from utils.schemas import dict_dtypes_onehot_schema, schema_train_3
+from utils.schemas import dict_dtypes_onehot_schema, schema_train_3, schema_train_4
 
 #Save importances:
 save_feature_importances = 1
@@ -24,12 +24,12 @@ save_feature_importances = 1
 #Dict para reducir memoria:
 
 print('Cargando datos del TRAIN')
-path = 'data/train_final_3'
+path = 'data/train_final_4'
 allFiles = glob.glob(path + "/*.csv")
 list_ = []
 for file_ in allFiles:
     df = pd.read_csv(file_)
-    df = (df.fillna(-1)).astype(schema_train_3)
+    df = (df.fillna(-1)).astype(schema_train_4)
     list_.append(df)
 
 train = pd.concat(list_, axis = 0, ignore_index = True)
@@ -51,14 +51,14 @@ skf.get_n_splits(train_ids, y_train)
 
 # Bajar max_depth para evitar overfitting
 print('Comienza entrenamiento del modelo LightGBM')
-lgb_model = lgb.LGBMClassifier(max_depth=15,
+lgb_model = lgb.LGBMClassifier(max_depth=11,
                                n_estimators=10000,
                                learning_rate=0.05,
                                num_leaves=256,
-                               colsample_bytree=0.3,
+                               colsample_bytree=0.25,
                                objective='binary',
-                               lambda_l1=0.1,
-                               lambda_l2=0.1,
+                               lambda_l1=0,
+                               lambda_l2=0,
                                n_jobs=-1)
 
 counter = 0
@@ -70,7 +70,7 @@ for train_index, test_index in skf.split(train_ids, y_train):
 
     lgb_model.fit(X_fit, y_fit, eval_metric='auc',
                   eval_set=[(X_val, y_val)],
-                  verbose=50, early_stopping_rounds=20)
+                  verbose=50, early_stopping_rounds=50)
 
     del X_fit, X_val, y_fit, y_val, train_index, test_index
     gc.collect()
@@ -80,14 +80,14 @@ for train_index, test_index in skf.split(train_ids, y_train):
 print('Best score en el entrenamiento:', lgb_model.best_score_)
 
 print('Guardamos el modelo')
-joblib.dump(lgb_model, 'saved_models/lgbc_model_4.pkl')
+joblib.dump(lgb_model, 'saved_models/lgbc_model_5.pkl')
 del X_train
 del y_train
 gc.collect()
 
 if save_feature_importances:
     importance_df = pd.DataFrame()
-    importance_df["importance"] = lgb_model.feature_importances_(importance_type='gain')
+    importance_df["importance"] = lgb_model.feature_importance(importance_type='gain')
     importance_df["feature"] = sel_cols
 
     plt.figure(figsize=(14, 25))
@@ -97,8 +97,8 @@ if save_feature_importances:
                                                ascending=False))
     plt.title('LightGBM Features')
     plt.tight_layout()
-    plt.savefig('importances/lgbc_model_4_importances.png')
+    plt.savefig('importances/lgbc_model_5_importances.png')
 
     importance_df.sort_values(by="importance", ascending=False) \
-        .to_csv('importances/feature_importances_lgbc_model_3.csv', index=True)
+        .to_csv('importances/feature_importances_lgbc_model_5.csv', index=True)
 
