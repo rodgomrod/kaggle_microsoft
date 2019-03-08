@@ -29,11 +29,12 @@ for file_ in allFiles:
 
 test = pd.concat(list_, axis = 0, ignore_index = True).fillna(-1)
 
+drop_version = ['AvSigVersion_index', 'EngineVersion_index', 'Census_OSVersion_index', 'AppVersion_index']
 sel_cols = [c for c in test.columns if c not in ['MachineIdentifier',
                                                  'HasDetections',
                                                  'Census_DeviceFamily_Windows.Server',
                                                  'Census_DeviceFamily_Windows.Desktop'
-                                                 ]
+                                                 ]+drop_version
             ]
 
 X_test = test.loc[:, sel_cols]

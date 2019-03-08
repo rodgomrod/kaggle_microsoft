@@ -40,25 +40,28 @@
 #python3 ETL/Load/train_test_new_variables.py
 #echo ""
 
+#echo -e "\e[92m\e[5mPasamos de CSV a NPY\e[0m"
+#python3 ETL/Transform/to_npy/from_csv_to_npy.py
+#echo ""
+
 echo -e "\e[92m\e[5mEntrenamos modelo de LightGBM\e[0m"
-python3 model/LightGBM/sklearn/train.py
+python3 model/LightGBM/sklearn/train_npy.py
 echo ""
 
 echo -e "\e[92m\e[5mPredicciones de LightGBM\e[0m"
-python3 model/LightGBM/sklearn/test.py
+python3 model/LightGBM/sklearn/test_npy.py
 echo ""
 
 echo -e "\e[92m\e[5mSubmitting predictions\e[0m"
-kaggle competitions submit -c microsoft-malware-prediction -f submissions/lgbc_model_5.csv -m "Nuevos datos V4
+kaggle competitions submit -c microsoft-malware-prediction -f submissions/lgbc_model_6.csv -m "Nuevos datos V4
 max_depth=11,
                                n_estimators=10000,
                                learning_rate=0.05,
                                num_leaves=256,
                                colsample_bytree=0.25,
                                objective='binary',
-                               lambda_l1=0,
-                               lambda_l2=0,
-                               n_jobs=-1"
+                               n_jobs=-1
+                               3 splits con npys"
 echo ""
 
 #echo -e "\e[92m\e[5mEntrenamos modelo de CatBoost\e[0m"

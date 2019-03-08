@@ -34,11 +34,12 @@ for file_ in allFiles:
 
 train = pd.concat(list_, axis = 0, ignore_index = True)
 
+drop_version = ['AvSigVersion_index', 'EngineVersion_index', 'Census_OSVersion_index', 'AppVersion_index']
 sel_cols = [c for c in train.columns if c not in ['MachineIdentifier',
                                                       'HasDetections',
                                                       'Census_DeviceFamily_Windows.Server',
                                                       'Census_DeviceFamily_Windows.Desktop'
-                                                     ]]
+                                                     ]+drop_version]
 
 X_train = train.loc[:, sel_cols]
 y_train = train.loc[:,'HasDetections']
