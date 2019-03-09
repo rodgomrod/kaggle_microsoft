@@ -7,13 +7,16 @@ import lightgbm as lgb
 import gc
 import seaborn as sns
 import matplotlib.pyplot as plt
-
 from utils.schemas import schema_train_4
+import sys
 
-#Save importances:
+
 save_feature_importances = 1
 
-#Dict para reducir memoria:
+params = eval(sys.argv[1])
+k = int(sys.argv[2])
+drop_version = int(sys.argv[3])
+model_name = sys.argv[4]
 
 print('Cargando datos del TRAIN')
 path = 'data/train_final_4'
@@ -26,7 +29,11 @@ for file_ in allFiles:
 
 train = pd.concat(list_, axis = 0, ignore_index = True)
 
-drop_version = ['AvSigVersion_index', 'EngineVersion_index', 'Census_OSVersion_index', 'AppVersion_index']
+if drop_version:
+    drop_version = ['AvSigVersion_index', 'EngineVersion_index', 'Census_OSVersion_index', 'AppVersion_index']
+else:
+    drop_version = []
+
 sel_cols = [c for c in train.columns if c not in ['MachineIdentifier',
                                                       'HasDetections',
                                                       'Census_DeviceFamily_Windows.Server',
@@ -40,18 +47,11 @@ del list_
 gc.collect()
 
 train_ids = X_train.index
-skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
 skf.get_n_splits(train_ids, y_train)
 
-# Bajar max_depth para evitar overfitting
 print('Comienza entrenamiento del modelo LightGBM')
-lgb_model = lgb.LGBMClassifier(max_depth=10,
-                               n_estimators=10000,
-                               learning_rate=0.05,
-                               num_leaves=256,
-                               colsample_bytree=0.2,
-                               objective='binary',
-                               n_jobs=-1)
+lgb_model = lgb.LGBMClassifier(**params)
 
 counter = 1
 for train_index, test_index in skf.split(train_ids, y_train):
@@ -60,21 +60,21 @@ for train_index, test_index in skf.split(train_ids, y_train):
     X_fit, X_val = X_train.iloc[train_index, :], X_train.iloc[test_index, :]
     y_fit, y_val = y_train.iloc[train_index], y_train.iloc[test_index]
 
-    lgb_model.fit(X_fit, y_fit,
+    lgb_model.fit(X_fit,
+                  y_fit,
                   eval_set=[(X_val, y_val)],
-                  verbose=50, early_stopping_rounds=15)
+                  verbose=50,
+                  early_stopping_rounds=20)
 
     del X_fit, X_val, y_fit, y_val, train_index, test_index
     gc.collect()
 
     print('Guardamos el modelo')
-    joblib.dump(lgb_model, 'saved_models/lgbc_model_6_{}.pkl'.format(counter))
+    joblib.dump(lgb_model, 'saved_models/{}_{}.pkl'.format(model_name, counter))
 
     counter += 1
 
 
-print('Guardamos el modelo')
-joblib.dump(lgb_model, 'saved_models/lgbc_model_6.pkl')
 del X_train
 del y_train
 gc.collect()
@@ -83,6 +83,8 @@ if save_feature_importances:
     importance_df = pd.DataFrame()
     importance_df["importance"] = lgb_model.feature_importances_()
     importance_df["feature"] = sel_cols
+    importance_df.sort_values(by="importance", ascending=False) \
+        .to_csv('importances/feature_importances_{}.csv'.format(model_name), index=True)
 
     plt.figure(figsize=(14, 25))
     sns.barplot(x="importance",
@@ -91,8 +93,5 @@ if save_feature_importances:
                                                ascending=False))
     plt.title('LightGBM Features')
     plt.tight_layout()
-    plt.savefig('importances/lgbc_model_6_importances.png')
-
-    importance_df.sort_values(by="importance", ascending=False) \
-        .to_csv('importances/feature_importances_lgbc_model_6.csv', index=True)
+    plt.savefig('importances/{}_importances.png'.format(model_name))
 
