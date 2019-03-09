@@ -1,22 +1,14 @@
 import pandas as pd
 import numpy as np
 import glob
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import TimeSeriesSplit
 from sklearn.model_selection import StratifiedKFold
 from sklearn.externals import joblib
 import lightgbm as lgb
-import xgboost as xgb
-from scipy.sparse import vstack, csr_matrix, save_npz, load_npz
-import warnings
-warnings.filterwarnings("ignore")
 import gc
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from utils.schemas import dict_dtypes_onehot_schema, schema_train_3, schema_train_4
+from utils.schemas import schema_train_4
 
 #Save importances:
 save_feature_importances = 1

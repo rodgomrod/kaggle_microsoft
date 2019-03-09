@@ -1,20 +1,11 @@
 import pandas as pd
 import numpy as np
 import glob
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import TimeSeriesSplit
-from sklearn.model_selection import StratifiedKFold
 from sklearn.externals import joblib
 import lightgbm as lgb
-import xgboost as xgb
-from scipy.sparse import vstack, csr_matrix, save_npz, load_npz
-import warnings
-warnings.filterwarnings("ignore")
 import gc
 
-from utils.schemas import dict_dtypes_onehot_schema, schema_train_3, schema_test_4
+from utils.schemas import schema_test_4
 
 
 print('Cargando datos del TEST')
@@ -50,19 +41,39 @@ model3 = joblib.load('saved_models/lgbc_model_6_3.pkl')
 model4 = joblib.load('saved_models/lgbc_model_6_4.pkl')
 model5 = joblib.load('saved_models/lgbc_model_6_5.pkl')
 
-print('Realizando y guardando predicciones')
+print('Realizando predicciones 1')
 preds1 = model1.predict_proba(X_test)
 preds_1 = preds1[:,1]
+del preds1
+gc.collect()
+
+print('Realizando predicciones 2')
 preds2 = model2.predict_proba(X_test)
 preds_2 = preds2[:,1]
+del preds2
+gc.collect()
+
+print('Realizando predicciones 3')
 preds3 = model3.predict_proba(X_test)
 preds_3 = preds3[:,1]
+del preds3
+gc.collect()
+
+print('Realizando predicciones 4')
 preds4 = model4.predict_proba(X_test)
 preds_4 = preds4[:,1]
+del preds4
+gc.collect()
+
+print('Realizando predicciones 5')
 preds5 = model5.predict_proba(X_test)
 preds_5 = preds5[:,1]
+del preds5
+del X_test
+gc.collect()
 
-final_prds = (preds1 + preds2 + preds3 + preds4 + preds5)/5
+print('Haciendo la media y guardando CSV')
+final_prds = (preds_1 + preds_2 + preds_3 + preds_4 + preds_5)/5
 
 df_prds = pd.DataFrame({'MachineIdentifier': X_machines, 'HasDetections': final_prds})
 

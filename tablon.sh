@@ -44,9 +44,9 @@
 #python3 ETL/Transform/to_npy/from_csv_to_npy.py
 #echo ""
 
-echo -e "\e[92m\e[5mEntrenamos modelo de LightGBM\e[0m"
-python3 model/LightGBM/sklearn/train.py
-echo ""
+#echo -e "\e[92m\e[5mEntrenamos modelo de LightGBM\e[0m"
+#python3 model/LightGBM/sklearn/train.py
+#echo ""
 
 echo -e "\e[92m\e[5mPredicciones de LightGBM\e[0m"
 python3 model/LightGBM/sklearn/test.py
