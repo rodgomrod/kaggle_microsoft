@@ -53,6 +53,8 @@ skf.get_n_splits(train_ids, y_train)
 print('Comienza entrenamiento del modelo LightGBM')
 lgb_model = lgb.LGBMClassifier(**params)
 
+ft_importances = np.zeros(X_train.shape[0])
+
 counter = 1
 for train_index, test_index in skf.split(train_ids, y_train):
     print('Fold {}\n'.format(counter))
@@ -72,25 +74,24 @@ for train_index, test_index in skf.split(train_ids, y_train):
     print('Guardamos el modelo')
     joblib.dump(lgb_model, 'saved_models/{}_{}.pkl'.format(model_name, counter))
 
+    ft_importances += lgb_model.feature_importances_
+
     counter += 1
 
-
+columnas = X_train.columns
 del X_train
 del y_train
 gc.collect()
 
 if save_feature_importances:
-    importance_df = pd.DataFrame()
-    importance_df["importance"] = lgb_model.feature_importances_()
-    importance_df["feature"] = sel_cols
-    importance_df.sort_values(by="importance", ascending=False) \
-        .to_csv('importances/feature_importances_{}.csv'.format(model_name), index=True)
+    imp = pd.DataFrame({'feature': columnas, 'importance': ft_importances/k})
+    df_imp_sort = imp.sort_values('importance', ascending=False)
+    df_imp_sort.to_csv('importances/feature_importances_{}.csv'.format(model_name), index=False)
 
     plt.figure(figsize=(14, 25))
     sns.barplot(x="importance",
                 y="feature",
-                data=importance_df.sort_values(by="importance",
-                                               ascending=False))
+                data=df_imp_sort)
     plt.title('LightGBM Features')
     plt.tight_layout()
     plt.savefig('importances/{}_importances.png'.format(model_name))
