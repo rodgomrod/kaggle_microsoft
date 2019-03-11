@@ -1,21 +1,15 @@
 import pandas as pd
 import numpy as np
 import glob
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import TimeSeriesSplit
-from sklearn.model_selection import StratifiedKFold
 from sklearn.externals import joblib
 import lightgbm as lgb
-import xgboost as xgb
-from scipy.sparse import vstack, csr_matrix, save_npz, load_npz
-import warnings
-warnings.filterwarnings("ignore")
 import gc
+from utils.schemas import schema_test_4
+import sys
 
-from utils.schemas import dict_dtypes_onehot_schema, schema_train_3, schema_test_4
-
+k = int(sys.argv[1])
+drop_version = int(sys.argv[2])
+model_name = sys.argv[3]
 
 print('Cargando datos del TEST')
 path = 'data/test_final_4'
@@ -27,13 +21,18 @@ for file_ in allFiles:
     list_.append(df)
 
 
-test = pd.concat(list_, axis = 0, ignore_index = True).fillna(-1)
+test = pd.concat(list_, axis = 0, ignore_index = True)
+
+if drop_version:
+    drop_version = ['AvSigVersion_index', 'EngineVersion_index', 'Census_OSVersion_index', 'AppVersion_index']
+else:
+    drop_version = []
 
 sel_cols = [c for c in test.columns if c not in ['MachineIdentifier',
                                                  'HasDetections',
                                                  'Census_DeviceFamily_Windows.Server',
                                                  'Census_DeviceFamily_Windows.Desktop'
-                                                 ]
+                                                 ]+drop_version
             ]
 
 X_test = test.loc[:, sel_cols]
@@ -42,13 +41,22 @@ del test
 del list_
 gc.collect()
 
-print('Cargando Modelo')
-model = joblib.load('saved_models/lgbc_model_5.pkl')
+lgb_test_preds = np.zeros(X_test.shape[0])
 
-print('Realizando y guardando predicciones')
-preds = model.predict_proba(X_test)
-preds_1 = preds[:,1]
+for i in range(1, k+1):
+    model = joblib.load('saved_models/{}_{}.pkl'.format(model_name, i))
+    print('Realizando predicciones. FOLD = {}'.format(i))
+    lgb_test_preds += model.predict_proba(X_test)[:, 1]
 
-df_prds = pd.DataFrame({'MachineIdentifier': X_machines, 'HasDetections': preds_1})
+    del model
+    gc.collect()
 
-df_prds.to_csv('submissions/lgbc_model_5.csv', index=None)
+del X_test
+gc.collect()
+
+print('Haciendo la media y guardando CSV')
+final_prds = lgb_test_preds/k
+
+df_prds = pd.DataFrame({'MachineIdentifier': X_machines, 'HasDetections': final_prds})
+
+df_prds.to_csv('submissions/{}.csv'.format(model_name), index=None)
