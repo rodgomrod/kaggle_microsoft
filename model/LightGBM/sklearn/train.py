@@ -17,6 +17,7 @@ params = eval(sys.argv[1])
 k = int(sys.argv[2])
 drop_version = int(sys.argv[3])
 model_name = sys.argv[4]
+ftimp = int(sys.argv[5])
 
 print('Cargando datos del TRAIN')
 path = 'data/train_final_4'
@@ -40,6 +41,48 @@ sel_cols = [c for c in train.columns if c not in ['MachineIdentifier',
                                                       'Census_DeviceFamily_Windows.Desktop'
                                                      ]+drop_version]
 
+if ftimp:
+    sel_cols = ['AVProductStatesIdentifier',
+                 'CountryIdentifier',
+                 'CityIdentifier',
+                 'max_AvSigVersion_diff',
+                 'Census_ProcessorModelIdentifier',
+                 'Census_SystemVolumeTotalCapacity',
+                 'count8',
+                 'count5',
+                 'count7',
+                 'Census_FirmwareVersionIdentifier',
+                 'LocaleEnglishNameIdentifier',
+                 'Census_OEMModelIdentifier',
+                 'Census_OSBuildRevision',
+                 'count1',
+                 'AvSigVersion_1_index',
+                 'Census_InternalPrimaryDiagonalDisplaySizeInInches',
+                 'Wdft_RegionIdentifier',
+                 'GeoNameIdentifier',
+                 'SmartScreen_index',
+                 'count4',
+                 'count(DISTINCT AvSigVersion_Name)',
+                 'max_OSVersion_diff',
+                 'Census_OSInstallTypeName_index',
+                 'count6',
+                 'Census_OEMNameIdentifier',
+                 'prediction_64',
+                 'IeVerIdentifier',
+                 'OsBuildLab_index',
+                 'Census_ActivationChannel_index',
+                 'Census_PrimaryDiskTotalCapacity',
+                 'AppVersion_1_index',
+                 'Census_InternalBatteryNumberOfCharges',
+                 'AppVersion_0_index',
+                 'Census_TotalPhysicalRAM',
+                 'max_OsBuildLab_diff',
+                 'Census_OSInstallLanguageIdentifier',
+                 'Census_OSUILocaleIdentifier',
+                 'Census_FirmwareManufacturerIdentifier',
+                 'count2',
+                 'Wdft_IsGamer']
+
 X_train = train.loc[:, sel_cols]
 y_train = train.loc[:,'HasDetections']
 del train
@@ -53,7 +96,7 @@ skf.get_n_splits(train_ids, y_train)
 print('Comienza entrenamiento del modelo LightGBM')
 lgb_model = lgb.LGBMClassifier(**params)
 
-ft_importances = np.zeros(X_train.shape[0])
+ft_importances = np.zeros(X_train.shape[1])
 
 counter = 1
 for train_index, test_index in skf.split(train_ids, y_train):
@@ -65,8 +108,8 @@ for train_index, test_index in skf.split(train_ids, y_train):
     lgb_model.fit(X_fit,
                   y_fit,
                   eval_set=[(X_val, y_val)],
-                  verbose=50,
-                  early_stopping_rounds=20)
+                  verbose=100,
+                  early_stopping_rounds=100)
 
     del X_fit, X_val, y_fit, y_val, train_index, test_index
     gc.collect()
