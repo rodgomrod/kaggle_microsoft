@@ -83,79 +83,12 @@ if ftimp:
                  'count2',
                  'Wdft_IsGamer']
 
-cat_cols = ['ProductName_index',
-'EngineVersion_0_index',
-'EngineVersion_1_index',
-'Census_OSVersion_0_index',
-'Census_OSVersion_1_index',
-'AppVersion_0_index',
-'AppVersion_1_index',
-'AvSigVersion_0_index',
-'AvSigVersion_1_index',
-'OsVer_0_index',
-'OsVer_1_index',
-'Platform_index',
-'Processor_index',
-'OsPlatformSubRelease_index',
-'OsBuildLab_index',
-'SkuEdition_index',
-'PuaMode_index',
-'SmartScreen_index',
-'Census_MDC2FormFactor_index',
-'Census_DeviceFamily_index',
-'Census_ProcessorClass_index',
-'Census_PrimaryDiskTypeName_index',
-'Census_ChassisTypeName_index',
-'Census_PowerPlatformRoleName_index',
-'Census_InternalBatteryType_index',
-'Census_OSArchitecture_index',
-'Census_OSBranch_index',
-'Census_OSEdition_index',
-'Census_OSSkuName_index',
-'Census_OSInstallTypeName_index',
-'Census_OSWUAutoUpdateOptionsName_index',
-'Census_GenuineStateName_index',
-'Census_ActivationChannel_index',
-'Census_FlightRing_index',
-'OsVer_index',
-'DefaultBrowsersIdentifier',
-'AVProductStatesIdentifier',
-'CountryIdentifier',
-'CityIdentifier',
-'OrganizationIdentifier',
-'GeoNameIdentifier',
-'LocaleEnglishNameIdentifier',
-'IeVerIdentifier',
-'Census_OEMNameIdentifier',
-'Census_OEMModelIdentifier',
-'Census_ProcessorManufacturerIdentifier',
-'Census_ProcessorModelIdentifier',
-'Census_OSInstallLanguageIdentifier',
-'Census_OSUILocaleIdentifier',
-'Census_FirmwareManufacturerIdentifier',
-'Census_FirmwareVersionIdentifier',
-'Wdft_RegionIdentifier',
-'RtpStateBitfield',
-'prediction_2',
-'prediction_4',
-'prediction_8',
-'prediction_16',
-'prediction_32',
-'prediction_64'
-]
 
 X_train = train.loc[:, sel_cols]
 y_train = train.loc[:,'HasDetections']
 del train
 del list_
 gc.collect()
-
-n = 0
-cat_list = list()
-for c in X_train.columns:
-    if c in cat_cols:
-        cat_list.append(n)
-    n += 1
 
 
 train_ids = X_train.index
