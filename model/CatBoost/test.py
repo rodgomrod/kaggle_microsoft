@@ -1,124 +1,63 @@
-import numpy as np
 import pandas as pd
-import gc
-from catboost import CatBoostClassifier
+import numpy as np
+import glob
 from sklearn.externals import joblib
+import lightgbm as lgb
+import gc
+from utils.schemas import schema_test_4
+import sys
 
-# TRAIN "RAW"
-path = 'data/test.csv'
+k = int(sys.argv[1])
+drop_version = int(sys.argv[2])
+model_name = sys.argv[3]
+ftimp = int(sys.argv[4])
 
-dtypes = {
-        'MachineIdentifier':                                    'category',
-        'ProductName':                                          'category',
-        'EngineVersion':                                        'category',
-        'AppVersion':                                           'category',
-        'AvSigVersion':                                         'category',
-        'IsBeta':                                               'int8',
-        'RtpStateBitfield':                                     'float16',
-        'IsSxsPassiveMode':                                     'int8',
-        'DefaultBrowsersIdentifier':                            'float16',
-        'AVProductStatesIdentifier':                            'float32',
-        'AVProductsInstalled':                                  'float16',
-        'AVProductsEnabled':                                    'float16',
-        'HasTpm':                                               'int8',
-        'CountryIdentifier':                                    'int16',
-        'CityIdentifier':                                       'float32',
-        'OrganizationIdentifier':                               'float16',
-        'GeoNameIdentifier':                                    'float16',
-        'LocaleEnglishNameIdentifier':                          'int8',
-        'Platform':                                             'category',
-        'Processor':                                            'category',
-        'OsVer':                                                'category',
-        'OsBuild':                                              'int16',
-        'OsSuite':                                              'int16',
-        'OsPlatformSubRelease':                                 'category',
-        'OsBuildLab':                                           'category',
-        'SkuEdition':                                           'category',
-        'IsProtected':                                          'float16',
-        'AutoSampleOptIn':                                      'int8',
-        'PuaMode':                                              'category',
-        'SMode':                                                'float16',
-        'IeVerIdentifier':                                      'float16',
-        'SmartScreen':                                          'category',
-        'Firewall':                                             'float16',
-        'UacLuaenable':                                         'float32',
-        'Census_MDC2FormFactor':                                'category',
-        'Census_DeviceFamily':                                  'category',
-        'Census_OEMNameIdentifier':                             'float16',
-        'Census_OEMModelIdentifier':                            'float32',
-        'Census_ProcessorCoreCount':                            'float16',
-        'Census_ProcessorManufacturerIdentifier':               'float16',
-        'Census_ProcessorModelIdentifier':                      'float16',
-        'Census_ProcessorClass':                                'category',
-        'Census_PrimaryDiskTotalCapacity':                      'float32',
-        'Census_PrimaryDiskTypeName':                           'category',
-        'Census_SystemVolumeTotalCapacity':                     'float32',
-        'Census_HasOpticalDiskDrive':                           'int8',
-        'Census_TotalPhysicalRAM':                              'float32',
-        'Census_ChassisTypeName':                               'category',
-        'Census_InternalPrimaryDiagonalDisplaySizeInInches':    'float16',
-        'Census_InternalPrimaryDisplayResolutionHorizontal':    'float16',
-        'Census_InternalPrimaryDisplayResolutionVertical':      'float16',
-        'Census_PowerPlatformRoleName':                         'category',
-        'Census_InternalBatteryType':                           'category',
-        'Census_InternalBatteryNumberOfCharges':                'float32',
-        'Census_OSVersion':                                     'category',
-        'Census_OSArchitecture':                                'category',
-        'Census_OSBranch':                                      'category',
-        'Census_OSBuildNumber':                                 'int16',
-        'Census_OSBuildRevision':                               'int32',
-        'Census_OSEdition':                                     'category',
-        'Census_OSSkuName':                                     'category',
-        'Census_OSInstallTypeName':                             'category',
-        'Census_OSInstallLanguageIdentifier':                   'float16',
-        'Census_OSUILocaleIdentifier':                          'int16',
-        'Census_OSWUAutoUpdateOptionsName':                     'category',
-        'Census_IsPortableOperatingSystem':                     'int8',
-        'Census_GenuineStateName':                              'category',
-        'Census_ActivationChannel':                             'category',
-        'Census_IsFlightingInternal':                           'float16',
-        'Census_IsFlightsDisabled':                             'float16',
-        'Census_FlightRing':                                    'category',
-        'Census_ThresholdOptIn':                                'float16',
-        'Census_FirmwareManufacturerIdentifier':                'float16',
-        'Census_FirmwareVersionIdentifier':                     'float32',
-        'Census_IsSecureBootEnabled':                           'int8',
-        'Census_IsWIMBootEnabled':                              'float16',
-        'Census_IsVirtualDevice':                               'float16',
-        'Census_IsTouchEnabled':                                'int8',
-        'Census_IsPenCapable':                                  'int8',
-        'Census_IsAlwaysOnAlwaysConnectedCapable':              'float16',
-        'Wdft_IsGamer':                                         'float16',
-        'Wdft_RegionIdentifier':                                'float16',
-        'HasDetections':                                        'int8'
-        }
+print('Cargando datos del TEST')
+path = 'data/test_final_4'
+allFiles = glob.glob(path + "/*.csv")
+list_ = []
+for file_ in allFiles:
+    df = pd.read_csv(file_)
+    df = (df.fillna(-1)).astype(schema_test_4)
+    list_.append(df)
 
-# Para full test quitar el nrows
-test = pd.read_csv(path, low_memory=True)
-# null_dict = dict()
-# for c, t in zip(test.columns, test.dtypes):
-#     if t == 'category':
-#         null_dict[c] = '0'
-#     else:
-#         null_dict[c] = 0
 
-test = test.fillna(0)
+test = pd.concat(list_, axis = 0, ignore_index = True)
+
+if drop_version:
+    drop_version = ['AvSigVersion_index', 'EngineVersion_index', 'Census_OSVersion_index', 'AppVersion_index']
+else:
+    drop_version = []
 
 sel_cols = [c for c in test.columns if c not in ['MachineIdentifier',
-                                                  'HasDetections']]
+                                                 'HasDetections',
+                                                 'Census_DeviceFamily_Windows.Server',
+                                                 'Census_DeviceFamily_Windows.Desktop'
+                                                 ]+drop_version
+            ]
 
 X_test = test.loc[:, sel_cols]
-X_machines = test.loc[:,'MachineIdentifier']
+X_machines = test.loc[:, 'MachineIdentifier']
 del test
+del list_
 gc.collect()
 
-print('Cargando Modelo')
-model = joblib.load('saved_models/catboost_raw.pkl')
+cb_test_preds = np.zeros(X_test.shape[0])
 
-print('Realizando y guardando predicciones')
-preds = model.predict_proba(X_test)
-preds_1 = preds[:,1]
+for i in range(1, k+1):
+    model = joblib.load('saved_models/{}_{}.pkl'.format(model_name, i))
+    print('Realizando predicciones. FOLD = {}'.format(i))
+    cb_test_preds += model.predict_proba(X_test)[:, 1]
 
-df_prds = pd.DataFrame({'MachineIdentifier': X_machines, 'HasDetections': preds_1})
+    del model
+    gc.collect()
 
-df_prds.to_csv('submissions/catboost_raw.csv', index=None)
+del X_test
+gc.collect()
+
+print('Haciendo la media y guardando CSV')
+final_prds = cb_test_preds/k
+
+df_prds = pd.DataFrame({'MachineIdentifier': X_machines, 'HasDetections': final_prds})
+
+df_prds.to_csv('submissions/{}.csv'.format(model_name), index=None)

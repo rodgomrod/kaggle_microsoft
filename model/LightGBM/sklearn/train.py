@@ -113,7 +113,12 @@ for train_index, test_index in skf.split(train_ids, y_train):
                   verbose=100,
                   early_stopping_rounds=100)
 
-    del X_fit, X_val, y_fit, y_val, train_index, test_index
+    del X_fit
+    del X_val
+    del y_fit
+    del y_val
+    del train_index
+    del test_index
     gc.collect()
 
     print('Guardamos el modelo')
