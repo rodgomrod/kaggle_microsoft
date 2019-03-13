@@ -8,3 +8,4 @@ pyspark
 tensorflow
 keras
 seaborn
+catboost
